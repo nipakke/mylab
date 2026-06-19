@@ -49,11 +49,31 @@
     </style>
 </head>
 <body class="h-full antialiased font-sans bg-base-100 text-base-content">
-    <div class="navbar bg-base-200 border-b border-base-300 px-6">
-        <a class="text-xl font-bold text-primary tracking-wider">⚡ SHIPPED HYPERMEDIA</a>
-    </div>
     <main class="p-8 max-w-6xl mx-auto">
         {% block content %}{% endblock %}
     </main>
+
+    {% if is_dev %}
+    <script>
+    (function () {
+        var es = new EventSource('/dev/reload');
+        es.onerror = function () {
+            es.close();
+            console.log('[dev] server restarting, waiting...');
+            var attempts = 0;
+            var poll = setInterval(function () {
+                var xhr = new XMLHttpRequest();
+                xhr.open('HEAD', '/', true);
+                xhr.onload = function () {
+                    clearInterval(poll);
+                    location.reload();
+                };
+                xhr.send();
+                if (++attempts > 300) clearInterval(poll);
+            }, 1000);
+        };
+    })();
+    </script>
+    {% endif %}
 </body>
 </html>

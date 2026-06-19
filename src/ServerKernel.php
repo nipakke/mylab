@@ -13,6 +13,7 @@ use React\Http\Message\Response;
 use React\Socket\SocketServer;
 use Shipped\Backend\Action\RefreshContainers;
 use Shipped\Backend\Handler\ContainerRefreshHandler;
+use Shipped\Backend\Handler\DevReloadHandler;
 use Shipped\Backend\Handler\HomeHandler;
 use Shipped\Backend\Service\ContainerStore;
 use Shipped\Backend\Service\ContainerSyncService;
@@ -23,20 +24,22 @@ use Twig\Loader\FilesystemLoader;
 
 final class ServerKernel
 {
+    private readonly bool $isDev;
+
     private readonly DockerServiceInterface $dockerService;
 
     private readonly Environment $twig;
 
     public function __construct()
     {
-        $isDev = getenv('APP_ENV') === 'local';
+        $this->isDev = getenv('APP_ENV') === 'local';
 
         $loader = new FilesystemLoader(__DIR__.'/views');
         $this->twig = new Environment($loader, [
-            'cache' => $isDev ? false : __DIR__.'/../cache/twig',
+            'cache' => $this->isDev ? false : __DIR__.'/../cache/twig',
             'strict_variables' => true,
         ]);
-        $this->twig->addGlobal('is_dev', $isDev);
+        $this->twig->addGlobal('is_dev', $this->isDev);
 
         $this->dockerService = new DockerService(new Client);
     }
@@ -51,13 +54,20 @@ final class ServerKernel
             new RefreshContainers($this->dockerService, $containerStore, $this->twig),
         );
 
+        $devReloadHandler = $this->isDev ? new DevReloadHandler : null;
+
         $dispatcher = FastRoute\simpleDispatcher(
             function (FastRoute\RouteCollector $r) use (
                 $homeHandler,
                 $refreshHandler,
+                $devReloadHandler,
             ): void {
                 $r->addRoute('GET', '/', $homeHandler);
                 $r->addRoute('POST', '/containers/refresh', $refreshHandler->handle(...));
+
+                if ($devReloadHandler !== null) {
+                    $r->addRoute('GET', '/dev/reload', $devReloadHandler);
+                }
             }
         );
 

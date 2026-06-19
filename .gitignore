@@ -15,3 +15,6 @@ Thumbs.db
 # Env
 .env
 .env.local
+
+# OpenCode temp sessions
+.tmp/

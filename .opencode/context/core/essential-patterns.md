@@ -188,14 +188,14 @@ These patterns are language-agnostic. For language-specific implementations:
 ## Quick Checklist
 
 Before committing code, verify:
-- ✅ Pure functions (no side effects)
-- ✅ Input validation
-- ✅ Error handling
-- ✅ No hardcoded secrets
-- ✅ Tests written and passing
-- ✅ Documentation updated
-- ✅ No security vulnerabilities
-- ✅ Code is modular and maintainable
+- Pure functions (no side effects)
+- Input validation
+- Error handling
+- No hardcoded secrets
+- Tests written and passing
+- Documentation updated
+- No security vulnerabilities
+- Code is modular and maintainable
 
 ---
 

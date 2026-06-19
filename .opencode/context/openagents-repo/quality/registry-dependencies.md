@@ -68,11 +68,11 @@ dependencies:
 ```
 
 **Why declare dependencies?**
-- ✅ **Validation**: Catch missing components before runtime
-- ✅ **Documentation**: Clear visibility of what each component needs
-- ✅ **Installation**: Installers can fetch all required dependencies
-- ✅ **Dependency graphs**: Visualize component relationships
-- ✅ **Breaking change detection**: Know what's affected by changes
+- **Validation**: Catch missing components before runtime
+- **Documentation**: Clear visibility of what each component needs
+- **Installation**: Installers can fetch all required dependencies
+- **Dependency graphs**: Visualize component relationships
+- **Breaking change detection**: Know what's affected by changes
 
 ---
 
@@ -89,10 +89,10 @@ BEFORE any code implementation, ALWAYS load:
 ```
 
 **Without dependency declaration**:
-- ❌ No validation that context file exists
-- ❌ Can't track which agents use which context files
-- ❌ Breaking changes when context files are moved/deleted
-- ❌ Installers don't know to fetch context files
+- No validation that context file exists
+- Can't track which agents use which context files
+- Breaking changes when context files are moved/deleted
+- Installers don't know to fetch context files
 
 ### The Solution
 
@@ -176,11 +176,11 @@ Before committing changes to agents, commands, or context files:
 **Purpose**: Analyze context file usage and validate dependencies
 
 **What it checks**:
-- ✅ Agents referencing context files in prompts
-- ✅ Context dependencies declared in frontmatter
-- ✅ Context files exist on disk
-- ✅ Context files in registry
-- ✅ Unused context files
+- Agents referencing context files in prompts
+- Context dependencies declared in frontmatter
+- Context files exist on disk
+- Context files in registry
+- Unused context files
 
 **Usage**:
 ```bash
@@ -249,11 +249,11 @@ dependencies:
 **Purpose**: Comprehensive registry validation
 
 **Checks**:
-- ✅ All component paths exist
-- ✅ All dependencies exist in registry
-- ✅ No duplicate IDs
-- ✅ Valid JSON structure
-- ✅ Required fields present
+- All component paths exist
+- All dependencies exist in registry
+- No duplicate IDs
+- Valid JSON structure
+- Required fields present
 
 **Usage**:
 ```bash
@@ -280,27 +280,27 @@ Fix: Add missing component to registry or remove from dependencies
 
 A high-quality registry has:
 
-✅ **Complete dependencies**: All component dependencies declared
-✅ **Validated dependencies**: All dependencies exist in registry
-✅ **No orphans**: All context files used by at least one component
-✅ **Consistent format**: Dependencies use `type:id` format
-✅ **Up-to-date**: Registry reflects current component state
-✅ **No broken paths**: All component paths valid
+- **Complete dependencies**: All component dependencies declared
+- **Validated dependencies**: All dependencies exist in registry
+- **No orphans**: All context files used by at least one component
+- **Consistent format**: Dependencies use `type:id` format
+- **Up-to-date**: Registry reflects current component state
+- **No broken paths**: All component paths valid
 
 ### Dependency Declaration Standards
 
 **DO**:
-- ✅ Declare all subagents you delegate to
-- ✅ Declare all context files you reference
-- ✅ Declare all commands you invoke
-- ✅ Use correct format: `type:id`
-- ✅ Keep dependencies in frontmatter (not hardcoded in prompts)
+- Declare all subagents you delegate to
+- Declare all context files you reference
+- Declare all commands you invoke
+- Use correct format: `type:id`
+- Keep dependencies in frontmatter (not hardcoded in prompts)
 
 **DON'T**:
-- ❌ Reference context files without declaring dependency
-- ❌ Use invalid dependency formats
-- ❌ Declare dependencies you don't actually use
-- ❌ Forget to update registry after adding dependencies
+- Reference context files without declaring dependency
+- Use invalid dependency formats
+- Declare dependencies you don't actually use
+- Forget to update registry after adding dependencies
 
 ---
 
@@ -494,18 +494,18 @@ echo "Validating registry dependencies..."
 
 # Check context dependencies
 /check-context-deps || {
-  echo "❌ Context dependency validation failed"
+  echo "[FAIL] Context dependency validation failed"
   echo "Run: /check-context-deps --fix"
   exit 1
 }
 
 # Validate registry
 ./scripts/registry/validate-registry.sh || {
-  echo "❌ Registry validation failed"
+  echo "[FAIL] Registry validation failed"
   exit 1
 }
 
-echo "✅ Registry validation passed"
+echo "[PASS] Registry validation passed"
 ```
 
 ### GitHub Actions

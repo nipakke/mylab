@@ -6,6 +6,7 @@ namespace Shipped\Backend\Service;
 
 use Clue\React\Docker\Client;
 use React\Promise\PromiseInterface;
+use React\Stream\ReadableStreamInterface;
 use Shipped\Backend\Domain\Container;
 use Shipped\Backend\Domain\TelemetrySnapshot;
 
@@ -44,6 +45,13 @@ final class DockerService implements DockerServiceInterface
             cpu: $cpuPercent.'%',
             memory: $this->getMemoryUsagePercent(),
         );
+    }
+
+    public function eventsStream(?float $since = null, ?float $until = null, ?array $filters = null): ReadableStreamInterface
+    {
+        $client = $this->client ?? new Client;
+
+        return $client->eventsStream($since, $until, $filters ?? []);
     }
 
     /**

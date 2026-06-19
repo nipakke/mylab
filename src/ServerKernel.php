@@ -17,8 +17,8 @@ use Shipped\Backend\Action\StreamTelemetry;
 use Shipped\Backend\Handler\ContainerRefreshHandler;
 use Shipped\Backend\Handler\HomeHandler;
 use Shipped\Backend\Handler\TelemetryStreamHandler;
-use Shipped\Backend\Job\CollectContainers;
 use Shipped\Backend\Service\ContainerStore;
+use Shipped\Backend\Service\ContainerSyncService;
 use Shipped\Backend\Service\DockerService;
 use Shipped\Backend\Service\DockerServiceInterface;
 use Twig\Environment;
@@ -85,11 +85,11 @@ final class ServerKernel
             return new Response(404, ['Content-Type' => 'text/plain'], '404 - Engine Route Missing');
         });
 
-        $collectJob = new CollectContainers(
+        $syncService = new ContainerSyncService(
             $this->dockerService,
             $containerStore,
         );
-        $collectJob->start();
+        $syncService->start();
 
         Loop::addPeriodicTimer(5.0, function (): void {
             echo '['.date('H:i:s')."] Async heartbeat — worker alive\n";

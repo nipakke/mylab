@@ -36,6 +36,26 @@ final class ContainerStore
      */
     public function update(array $containers): void
     {
-        $this->containers = $containers;
+        $indexed = [];
+        foreach ($containers as $container) {
+            $indexed[$container->id] = $container;
+        }
+        $this->containers = $indexed;
+    }
+
+    /**
+     * Add or replace a single container in the store.
+     */
+    public function add(Container $container): void
+    {
+        $this->containers[$container->id] = $container;
+    }
+
+    /**
+     * Remove a container by its Docker ID.
+     */
+    public function remove(string $id): void
+    {
+        unset($this->containers[$id]);
     }
 }

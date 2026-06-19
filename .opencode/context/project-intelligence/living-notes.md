@@ -55,6 +55,7 @@
 - **Error handling** — No try/catch around Docker API calls. A Docker daemon restart breaks the dashboard silently.
 - **Testing coverage** — Only 3 tests in `RenderTest.php`. No tests for Action or Service layers.
 - **Configuration** — Docker socket path is hardcoded. Should be configurable via env var.
+- **Rate limiting / DDoS** — Now handled via `RateLimiter` (token bucket per IP) + `IpResolver` (trusted proxy resolution). Configurable via `RATE_LIMIT`, `RATE_LIMIT_WINDOW`, `TRUST_PROXY`, `PROXY_IP_HEADER` env vars. See `.env.example`.
 
 ### Patterns & Conventions
 
@@ -76,6 +77,7 @@
 |------|------|--------|
 | Core dashboard | Container listing | Done |
 | Background collection | Periodic Docker polling every 10s → ContainerStore | Done |
+| Rate limiting & DDoS protection | Token-bucket per IP via RateLimiter + IpResolver | **Done 2026-06-19** |
 | Error handling | Graceful failure states | Pending |
 | Container actions | Start/stop/restart via HTMX | Planned |
 | Testing | Expand test coverage to Action/Service layers | Planned |

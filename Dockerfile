@@ -14,7 +14,12 @@ FROM dunglas/frankenphp:latest-alpine
 
 COPY --from=builder /usr/bin/caddy /usr/bin/frankenphp
 
-ENV APP_ENV=production
+# Runtime configuration (override at container start)
+ENV APP_ENV=production \
+    RATE_LIMIT=60 \
+    RATE_LIMIT_WINDOW=60 \
+    TRUST_PROXY=auto \
+    PROXY_IP_HEADER=X-Forwarded-For
 WORKDIR /app
 COPY . /app
 

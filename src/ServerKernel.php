@@ -20,6 +20,8 @@ use Shipped\Backend\Service\ContainerStore;
 use Shipped\Backend\Service\ContainerSyncService;
 use Shipped\Backend\Service\DockerService;
 use Shipped\Backend\Service\DockerServiceInterface;
+use Shipped\Backend\Service\IpResolver;
+use Shipped\Backend\Service\RateLimiter;
 use Shipped\Backend\Service\SseBroadcaster;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
@@ -31,6 +33,10 @@ final class ServerKernel
     private readonly DockerServiceInterface $dockerService;
 
     private readonly Environment $twig;
+
+    private readonly IpResolver $ipResolver;
+
+    private readonly RateLimiter $rateLimiter;
 
     public function __construct()
     {
@@ -44,6 +50,9 @@ final class ServerKernel
         $this->twig->addGlobal('is_dev', $this->isDev);
 
         $this->dockerService = new DockerService(new Client);
+
+        $this->ipResolver = new IpResolver;
+        $this->rateLimiter = new RateLimiter;
     }
 
     public function run(): void
@@ -79,6 +88,19 @@ final class ServerKernel
         );
 
         $http = new HttpServer(function (ServerRequestInterface $request) use ($dispatcher) {
+            // ── Rate limiting ─────────────────────────────────────────
+            $clientIp = $this->ipResolver->resolve($request);
+
+            if (! $this->rateLimiter->isAllowed($clientIp)) {
+                $retryAfter = $this->rateLimiter->getRetryAfterSeconds($clientIp);
+
+                return new Response(429, [
+                    'Content-Type' => 'text/plain',
+                    'Retry-After' => (string) $retryAfter,
+                ], 'Too Many Requests');
+            }
+
+            // ── Routing ───────────────────────────────────────────────
             $routeInfo = $dispatcher->dispatch(
                 $request->getMethod(),
                 $request->getUri()->getPath(),

@@ -36,7 +36,6 @@
 |----------|--------|-------------|
 | Should we add container log streaming? | Open | Evaluate SSE vs chunked transfer for log tailing |
 | Should we add container start/stop/restart actions? | Open | Add action buttons with HTMX POST + confirmation |
-| Should we switch to FrankenPHP worker mode for production? | Open | Already in Dockerfile — needs validation |
 
 ## Known Issues
 

@@ -15,7 +15,7 @@
 |---------------|-------------------|------------------|----------------|
 | See all Docker containers at a glance | Docker API → Container DTOs → Twig table | Direct socket connection, no agents needed | No setup, instant visibility |
 | Auto-refreshing container list | HTMX POST /containers/refresh | Returns partial HTML, HTMX swaps DOM | Always current without manual refresh |
-| Simple deployment | Single Dockerfile (FrankenPHP + Caddy) | Multi-stage build, compiled Tailwind | One container to run |
+| Simple deployment | Single Dockerfile (PHP 8.3 CLI Alpine) | Multi-stage build, compiled Tailwind | One container to run |
 | Zero-config setup | Docker socket access only | Unix socket connection via clue/docker-react | No API keys, no agent, no registration |
 
 ## Feature Mapping

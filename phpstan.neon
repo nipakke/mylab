@@ -4,8 +4,8 @@ parameters:
     paths:
         - Domain
         - Handler
+        - Kernel
         - Service
-        - server.php
-        - ServerKernel.php
+        - bin/server
     excludePaths:
         - vendor

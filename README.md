@@ -8,13 +8,15 @@ An asynchronous PHP hypermedia monolith for real-time Docker container monitorin
 Browser (HTMX + SSE)
        │
        ▼
-FrankenPHP / Caddy (port 8000)
-  ├── /assets/* → static files
-  └── /* → ReactPHP worker (127.0.0.1:8080)
-              │
-              ├── FastRoute dispatcher
-              ├── Handler → Action → DockerService (clue/docker-react)
-              └── Twig templates (server-rendered HTML)
+ReactPHP HTTP Server (port 8080)
+  ├── /assets/* → static files from public/
+  ├── /containers/stream → SSE push
+  ├── / → HomeHandler (Twig)
+  └── /* → 404
+       │
+       ├── FastRoute dispatcher
+       ├── Handler → Action → DockerService (clue/docker-react)
+       └── Twig templates (server-rendered HTML)
 ```
 
 The frontend uses **HTMX** for partial page updates. All rendering happens server-side via Twig — no build step, no SPA.
@@ -36,7 +38,7 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:8000`.
+Visit `http://localhost:8080`.
 
 ## Development Commands
 
@@ -54,7 +56,7 @@ Visit `http://localhost:8000`.
 make build
 ```
 
-Runs `composer install --no-dev --optimize-autoloader`. For containerized deployment, use the provided `Dockerfile` which builds a FrankenPHP/Caddy image with compiled Tailwind CSS.
+Runs `composer install --no-dev --optimize-autoloader`. For containerized deployment, use the provided `Dockerfile` which builds a PHP 8.3 CLI Alpine image with compiled Tailwind CSS.
 
 ## Routes
 
@@ -93,7 +95,7 @@ Each IP gets a token bucket that refills steadily. Up to `RATE_LIMIT` requests a
 **Recommended settings**:
 
 ```bash
-# Behind Traefik or Caddy on the same Docker network
+# Behind Traefik or nginx on the same Docker network
 RATE_LIMIT=60 TRUST_PROXY=auto make run
 
 # Behind Cloudflare
@@ -106,26 +108,37 @@ RATE_LIMIT=30 TRUST_PROXY=0 make run
 ## Project Structure
 
 ```
-src/
-├── server.php                  # Entry point
-├── ServerKernel.php            # DI, routing, HTTP server setup
-├── Action/                     # Business logic (use cases)
-│   └── ListContainers.php
-├── Domain/                     # Immutable DTOs
-│   └── Container.php
-├── Handler/                    # HTTP adapters
-│   └── HomeHandler.php
-├── Job/                        # Background jobs
-│   └── CollectContainers.php
-├── Service/                    # Service layer
+├── bin/
+│   └── server                   # Entry point — boots autoloader, runs kernel
+├── Kernel/
+│   └── ServerKernel.php         # DI wiring, routing, static files, HTTP server
+├── Action/                      # Business logic (use cases)
+│   └── RefreshContainers.php
+├── Domain/                      # Immutable DTOs
+│   ├── Container.php
+│   └── DashboardLink.php
+├── Handler/                     # HTTP adapters
+│   ├── HomeHandler.php
+│   ├── ContainerStreamHandler.php
+│   └── DevReloadHandler.php
+├── Service/                     # Service layer
 │   ├── ContainerStore.php
+│   ├── ContainerSyncService.php
 │   ├── DockerServiceInterface.php
 │   ├── DockerService.php
+│   ├── SseBroadcaster.php
 │   ├── IpResolver.php
 │   └── RateLimiter.php
-└── views/                      # Twig templates
-    ├── layout.twig
-    ├── home.twig
-    └── partials/
-        └── container-rows.twig
+├── views/                       # Twig templates
+│   ├── layout.twig
+│   ├── home.twig
+│   └── partials/
+│       ├── container-rows.twig
+│       └── link-cards.twig
+├── public/
+│   └── assets/
+│       └── css/
+│           └── app.min.css      # Compiled Tailwind CSS
+└── docker/
+    └── php.ini                  # Production OPcache + JIT config
 ```

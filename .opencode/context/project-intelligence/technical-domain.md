@@ -14,7 +14,7 @@
 
 | Layer | Technology | Version | Rationale |
 |-------|-----------|---------|-----------|
-| Language | PHP | ^8.2 | Strong typing, mature ecosystem, FrankenPHP support |
+| Language | PHP | ^8.2 | Strong typing, mature ecosystem, ReactPHP async runtime |
 | Runtime | ReactPHP | ^1.9 (http), ^1.4 (stream) | Async event loop — non-blocking I/O, no nginx/FPM needed |
 | Templates | Twig | ^3.0 | Server-side rendering, template inheritance, safe output |
 | Routing | FastRoute | ^1.3 | Simple, fast regex-based router (by Nikita Popov) |
@@ -22,7 +22,7 @@
 | Real-time | SSE (Server-Sent Events) | Native | Push container updates to browser via HTMX SSE extension |
 | Frontend | HTMX | CDN | Hypermedia-driven UI — partial swaps + SSE auto-refresh |
 | CSS | Tailwind CSS + daisyUI | CDN (dev) / compiled (prod) | Utility-first CSS with component library |
-| Server | FrankenPHP + Caddy | Dockerfile | Production-grade PHP app server with auto-SSL |
+| Server | ReactPHP (built-in) | Dockerfile | Async HTTP server — no external web server needed |
 | Testing | Pest | ^3.0 | Elegant PHP testing with strict type assertions |
 | Linting | Laravel Pint | ^1.29 | PHP CS Fixer preset, minimal config |
 | Static Analysis | PHPStan | ^2.2 | Level 8 — strict types, return types, null safety |
@@ -41,25 +41,24 @@ Pattern: Handler → ContainerStore (read path, direct)
 Browser (HTMX + SSE)
        │
        ▼
-FrankenPHP / Caddy (port 8000)
-  ├── /assets/* → static files
-  └── /* → reverse proxy → ReactPHP worker (127.0.0.1:8080)
-              │
-              ├── IpResolver (client IP, proxy-aware)
-              ├── RateLimiter (token-bucket, per-IP)
-              ├── FastRoute dispatcher
-              ├── Handler (HTTP adapter, thin)
-              │     ├── HomeHandler → ContainerStore → Twig (read)
-              │     ├── ContainerRefreshHandler → RefreshContainers → DockerService (refresh)
-              │     ├── ContainerStreamHandler → SseBroadcaster (SSE push)
-              │     └── DevReloadHandler (SSE, dev-only)
-              │
-              ├── ContainerSyncService (background sync)
-              │     ├── Docker events stream (real-time)
-              │     ├── Periodic fallback (30s safety net)
-              │     └── SseBroadcaster → SSE clients (push updates)
-              │
-              └── Twig templates (layout → home → partials)
+ReactPHP HTTP Server (port 8080, configurable via PORT env)
+       │
+       ├── Static file serving (GET /assets/* → public/)
+       ├── IpResolver (client IP, proxy-aware)
+       ├── RateLimiter (token-bucket, per-IP)
+       ├── FastRoute dispatcher
+       ├── Handler (HTTP adapter, thin)
+       │     ├── HomeHandler → ContainerStore → Twig (read)
+       │     ├── ContainerRefreshHandler → RefreshContainers → DockerService (refresh)
+       │     ├── ContainerStreamHandler → SseBroadcaster (SSE push)
+       │     └── DevReloadHandler (SSE, dev-only)
+       │
+       ├── ContainerSyncService (background sync)
+       │     ├── Docker events stream (real-time)
+       │     ├── Periodic fallback (30s safety net)
+       │     └── SseBroadcaster → SSE clients (push updates)
+       │
+       └── Twig templates (layout → home → partials)
 ```
 
 ### Why This Architecture?
@@ -74,9 +73,10 @@ The hypermedia monolith pattern was chosen to eliminate the complexity of a SPA 
 ## Project Structure
 
 ```
-src/
-├── server.php                  # Entry point — boots autoloader, creates ServerKernel
-├── ServerKernel.php            # DI wiring, route registration, ReactPHP HTTP server
+├── bin/
+│   └── server                      # Entry point — boots autoloader, runs kernel
+├── Kernel/
+│   └── ServerKernel.php            # DI wiring, route registration, static files, HTTP server
 │
 ├── Action/                     # Business logic (use-case layer)
 │   └── RefreshContainers.php   # Re-fetches containers → updates store → renders partial
@@ -101,6 +101,11 @@ src/
 │   ├── RateLimiter.php               # In-memory token-bucket rate limiter (per-IP)
 │   └── IpResolver.php                # Resolves real client IP (reverse-proxy aware)
 │
+├── public/
+│   └── assets/
+│       └── css/
+│           └── app.min.css           # Compiled Tailwind (served as static file)
+│
 └── views/                      # Twig templates
     ├── layout.twig             # Base HTML (HTMX, Tailwind, daisyUI)
     ├── home.twig               # Main page: link cards
@@ -110,11 +115,13 @@ src/
 ```
 
 **Key Directories**:
-- `src/Action/` — Business logic for write/refresh use-cases. Each action is a single use-case. Returns Promises for async operations.
-- `src/Domain/` — Immutable DTOs. No logic, just typed data carriers. All classes are `final readonly`.
-- `src/Handler/` — Thin HTTP adapters. Parses request, delegates to Action or reads from Store directly, formats Response.
-- `src/Service/` — Infrastructure concerns. Docker API client, in-memory storage, SSE broadcasting, rate limiting, IP resolution.
-- `src/views/` — Twig templates. Layout inheritance: `layout.twig` → `home.twig` → partials.
+- `bin/` — Entry point script. Boots autoloader and runs the kernel.
+- `Kernel/` — Application kernel. DI wiring, route registration, static file serving.
+- `Action/` — Business logic for write/refresh use-cases. Each action is a single use-case. Returns Promises for async operations.
+- `Domain/` — Immutable DTOs. No logic, just typed data carriers. All classes are `final readonly`.
+- `Handler/` — Thin HTTP adapters. Parses request, delegates to Action or reads from Store directly, formats Response.
+- `Service/` — Infrastructure concerns. Docker API client, in-memory storage, SSE broadcasting, rate limiting, IP resolution.
+- `views/` — Twig templates. Layout inheritance: `layout.twig` → `home.twig` → partials.
 
 ## Route Table
 
@@ -150,7 +157,7 @@ src/
 ```
 Setup: npm install (runs composer install via postinstall)
 Requirements: PHP 8.2+, Composer, Node.js, Docker Engine
-Local Dev: npm run dev (nodemon watches src/ for .php/.twig changes)
+Local Dev: npm run dev (nodemon watches Kernel/ Domain/ Handler/ Service/ for .php/.twig changes)
 Testing: ./vendor/bin/pest (or make test)
 Linting: ./vendor/bin/pint (or make lint)
 ```
@@ -159,7 +166,7 @@ Linting: ./vendor/bin/pint (or make lint)
 
 ```
 Environment: Production Docker container
-Platform: FrankenPHP + Caddy (Dockerfile)
+Platform: PHP 8.3 CLI Alpine (Dockerfile)
 CI/CD: Not yet configured
 Monitoring: Your monitoring tool of choice
 ```

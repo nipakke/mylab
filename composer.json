@@ -38,7 +38,7 @@
         "format": "pint",
         "lint": [
             "pint --test",
-            "parallel-lint Domain/ Handler/ Service/ server.php ServerKernel.php",
+            "parallel-lint Domain/ Kernel/ Handler/ Service/ bin/server",
             "phpstan analyse --configuration=phpstan.neon"
         ]
     }

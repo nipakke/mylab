@@ -1,7 +1,7 @@
 .PHONY: run build test lint format clean css
 
 run:
-	APP_ENV=local php server.php
+	APP_ENV=local php bin/server
 
 build:
 	composer install --no-dev --optimize-autoloader

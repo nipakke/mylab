@@ -2,7 +2,7 @@
 
 # PHP Performance — Dash Production
 
-> Runtime optimization for the FrankenPHP + ReactPHP production stack. OPcache, JIT, preloading, and async-specific tuning.
+> Runtime optimization for the PHP 8.3 + ReactPHP production stack. OPcache, JIT, preloading, and async-specific tuning.
 
 ## Quick Reference
 
@@ -10,7 +10,7 @@
 |---------|-----------|------|
 | Bytecode caching | OPcache | Always in production |
 | Just-in-time compilation | JIT (PHP 8.0+) | CPU-bound workloads |
-| Class preloading | `opcache.preload` | FrankenPHP worker mode |
+| Class preloading | `opcache.preload` | Long-running ReactPHP process |
 | Template caching | Twig compile cache | `APP_ENV=prod` |
 | Event loop health | Non-blocking I/O | Always |
 
@@ -18,10 +18,10 @@
 
 ## OPcache Configuration
 
-OPcache stores compiled PHP bytecode in shared memory, eliminating parse/compile overhead on every request. For a FrankenPHP worker-mode setup (long-running process), this is essential.
+OPcache stores compiled PHP bytecode in shared memory, eliminating parse/compile overhead on every request. For a long-running ReactPHP process, this is essential.
 
 ```
-; Production php.ini — apply to the FrankenPHP container
+; Production php.ini — apply to the PHP container
 opcache.enable=1
 opcache.memory_consumption=256
 opcache.interned_strings_buffer=16
@@ -79,13 +79,13 @@ Expected output includes `"on": true` and non-zero `buffer_size`.
 
 ---
 
-## Preloading (FrankenPHP Worker Mode)
+## Preloading
 
 Preloading loads PHP classes into shared memory at server startup, so they're available to all worker processes without disk I/O:
 
 ```php
 <?php
-// preload.php — loaded once at FrankenPHP startup
+// preload.php — loaded once at PHP process startup
 
 declare(strict_types=1);
 
@@ -126,7 +126,7 @@ opcache.preload_user=www-data
 ```
 
 **Caveats**:
-- Preloaded classes persist in shared memory. If you modify source files, you must restart FrankenPHP.
+- Preloaded classes persist in shared memory. If you modify source files, you must restart the PHP process.
 - Conditionally preload only in production: wrap `preload.php` in an environment check.
 - Large vendor directories (like `guzzle`, `psr`) don't need preloading — focus on your own `src/` and framework entry points.
 
@@ -149,7 +149,7 @@ $twig = new Environment($loader, [
 
 **Performance impact**: Without caching, every template is parsed and compiled on every render. With caching, it's a `require_once` of a pre-compiled PHP class.
 
-**Cache directory**: Ensure `cache/twig/` is writable by the FrankenPHP user (`www-data`) and persisted across container restarts (mount it as a volume if using ephemeral containers).
+**Cache directory**: Ensure `cache/twig/` is writable by the PHP process user (`www-data`) and persisted across container restarts (mount it as a volume if using ephemeral containers).
 
 ---
 
@@ -204,7 +204,7 @@ If a request hangs for several seconds and blocks all other requests, you have b
 **Tooling**: Use `strace` on the PHP process to see what syscall it's blocked on:
 
 ```bash
-strace -p $(pgrep -f 'server.php') -e trace=read,write,connect
+strace -p $(pgrep -f 'bin/server') -e trace=read,write,connect
 ```
 
 ---
@@ -224,10 +224,8 @@ COPY docker/php.ini /usr/local/etc/php/conf.d/99-performance.ini
 # Copy preload script
 COPY docker/preload.php /var/www/app/preload.php
 
-# Use FrankenPHP worker mode (not CGI/FPM — long-running process)
-COPY --from=dunglas/frankenphp:latest /usr/local/bin/frankenphp /usr/local/bin/frankenphp
-
-CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
+# Run ReactPHP directly (long-running async process)
+CMD ["php", "bin/server"]
 ```
 
 ---
@@ -240,7 +238,7 @@ CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
 - [ ] Twig cache directory writable and persisted
 - [ ] No blocking I/O anywhere in the codebase
 - [ ] `composer install --no-dev --optimize-autoloader` in production build
-- [ ] FrankenPHP worker mode (not CGI) for long-running ReactPHP process
+- [ ] Long-running ReactPHP process (not CGI/FPM)
 - [ ] OPcache status verified via `opcache_get_status()`
 
 ---
@@ -249,6 +247,6 @@ CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
 
 - [ ] Understand OPcache's role in eliminating per-request compile overhead
 - [ ] Know the JIT modes and which to use in production
-- [ ] Understand preloading for FrankenPHP worker mode
+- [ ] Understand preloading for long-running ReactPHP processes
 - [ ] Know the golden rule: never block the event loop
 - [ ] Know how to detect and fix blocking I/O

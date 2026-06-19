@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend;
+namespace Shipped\Backend\Kernel;
 
 use FastRoute;
 use Psr\Http\Message\ServerRequestInterface;
@@ -36,13 +36,34 @@ final class ServerKernel
 
     private readonly RateLimiter $rateLimiter;
 
+    private readonly string $publicDir;
+
+    private static array $mimeTypes = [
+        'css'   => 'text/css',
+        'js'    => 'application/javascript',
+        'json'  => 'application/json',
+        'png'   => 'image/png',
+        'jpg'   => 'image/jpeg',
+        'jpeg'  => 'image/jpeg',
+        'gif'   => 'image/gif',
+        'svg'   => 'image/svg+xml',
+        'ico'   => 'image/x-icon',
+        'woff'  => 'font/woff',
+        'woff2' => 'font/woff2',
+        'ttf'   => 'font/ttf',
+        'html'  => 'text/html',
+        'txt'   => 'text/plain',
+        'xml'   => 'application/xml',
+    ];
+
     public function __construct()
     {
         $this->isDev = getenv('APP_ENV') === 'local';
+        $this->publicDir = __DIR__.'/../public';
 
-        $loader = new FilesystemLoader(__DIR__.'/views');
+        $loader = new FilesystemLoader(__DIR__.'/../views');
         $this->twig = new Environment($loader, [
-            'cache' => $this->isDev ? false : __DIR__.'/cache/twig',
+            'cache' => $this->isDev ? false : __DIR__.'/../cache/twig',
             'strict_variables' => true,
         ]);
         $this->twig->addGlobal('is_dev', $this->isDev);
@@ -68,6 +89,49 @@ final class ServerKernel
 
         $this->ipResolver = new IpResolver;
         $this->rateLimiter = new RateLimiter;
+    }
+
+    private function resolveMime(string $path): string
+    {
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        return self::$mimeTypes[$ext] ?? 'application/octet-stream';
+    }
+
+    /**
+     * Serve a static file from the public/ directory with path-traversal protection.
+     */
+    private function serveStatic(string $requestPath): ?Response
+    {
+        $filePath = $this->publicDir.$requestPath;
+        $realFile = realpath($filePath);
+
+        if ($realFile === false) {
+            return null;
+        }
+
+        $realPublic = realpath($this->publicDir);
+        if ($realPublic === false || !str_starts_with($realFile, $realPublic)) {
+            return null;
+        }
+
+        if (!is_file($realFile) || !is_readable($realFile)) {
+            return null;
+        }
+
+        $content = file_get_contents($realFile);
+        $mime = $this->resolveMime($realFile);
+
+        $headers = [
+            'Content-Type'   => $mime,
+            'Content-Length' => (string) strlen($content),
+        ];
+
+        if (! $this->isDev) {
+            $headers['Cache-Control'] = 'public, max-age=604800, immutable';
+        }
+
+        return new Response(200, $headers, $content);
     }
 
     public function run(): void
@@ -105,7 +169,7 @@ final class ServerKernel
 
                 return new Response(429, [
                     'Content-Type' => 'text/plain',
-                    'Retry-After' => (string) $retryAfter,
+                    'Retry-After'  => (string) $retryAfter,
                 ], 'Too Many Requests');
             }
 
@@ -117,6 +181,14 @@ final class ServerKernel
 
             if ($routeInfo[0] === FastRoute\Dispatcher::FOUND) {
                 return $routeInfo[1]($request);
+            }
+
+            // ── Static file fallback ──────────────────────────────────
+            if ($request->getMethod() === 'GET') {
+                $staticResponse = $this->serveStatic($request->getUri()->getPath());
+                if ($staticResponse !== null) {
+                    return $staticResponse;
+                }
             }
 
             return new Response(404, ['Content-Type' => 'text/plain'], '404 - Engine Route Missing');
@@ -133,9 +205,10 @@ final class ServerKernel
             echo '['.date('H:i:s')."] Async heartbeat — worker alive\n";
         });
 
-        $socket = new SocketServer('127.0.0.1:8080');
+        $port = (int) (getenv('PORT') ?: 8080);
+        $socket = new SocketServer("0.0.0.0:{$port}");
         $http->listen($socket);
 
-        echo "ReactPHP Asynchronous Worker Engine listening on http://127.0.0.1:8080\n";
+        echo "ReactPHP Async Worker Engine listening on http://0.0.0.0:{$port}\n";
     }
 }

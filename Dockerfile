@@ -10,32 +10,30 @@ COPY views/ views/
 RUN npm run build:css
 
 # =========================================================================
-# STAGE 2: CADDY BUILDER (FrankenPHP with custom modules)
+# STAGE 2: PRODUCTION RUNTIME (PHP 8.3 CLI Alpine)
 # =========================================================================
-FROM lucaslorentz/caddy-docker-proxy:ci-alpine AS caddy-builder
-RUN xcaddy build \
-    --with github.com/tailscale/caddy-tailscale \
-    --with github.com/caddyserver/nginx-adapter
+FROM php:8.3-cli-alpine
 
-# =========================================================================
-# STAGE 3: PRODUCTION SERVER RUNTIME
-# =========================================================================
-FROM dunglas/frankenphp:latest-alpine
+# Enable OPcache for production performance
+RUN docker-php-ext-install opcache
 
-COPY --from=caddy-builder /usr/bin/caddy /usr/bin/frankenphp
 COPY --from=css /app/public/assets/css /app/public/assets/css
 
-# Runtime configuration (override at container start)
+# Runtime configuration
 ENV APP_ENV=production \
+    PORT=80 \
     RATE_LIMIT=60 \
-    RATE_LIMIT_WINDOW=60 \
-    TRUST_PROXY=auto \
-    PROXY_IP_HEADER=X-Forwarded-For
+    RATE_LIMIT_WINDOW=60
+
 WORKDIR /app
 COPY . /app
 
 # Production PHP config: OPcache + JIT optimizations
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-performance.ini
 
-# Run vendor clean updates
+# Production dependencies (no dev tools)
 RUN composer install --no-dev --optimize-autoloader
+
+EXPOSE 80
+
+CMD ["php", "bin/server"]

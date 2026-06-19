@@ -1,19 +1,16 @@
 .PHONY: run build test lint clean
 
-APP_NAME := dashboard-server
-BIN_DIR  := bin
-
 run:
-	go run ./apps/backend/cmd/server
+	APP_ENV=local php apps/backend/src/server.php
 
 build:
-	go build -o $(BIN_DIR)/$(APP_NAME) ./apps/backend/cmd/server
+	cd apps/backend && composer install --no-dev --optimize-autoloader
 
 test:
-	go test ./... -count=1 -v
+	cd apps/backend && ./vendor/bin/pest
 
 lint:
-	go vet ./...
+	cd apps/backend && php -l src/server.php && php -l src/DTO/Container.php
 
 clean:
-	rm -rf $(BIN_DIR)
+	rm -rf apps/backend/cache/twig

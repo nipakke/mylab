@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+
+    <script src="https://unpkg.com/htmx.org@2.0.0"></script>
+    <script src="https://unpkg.com/htmx-ext-sse@2.0.0"></script>
+
+    {% if is_dev %}
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.0.0/dist/full.css" />
+    {% else %}
+        <link rel="stylesheet" href="/assets/css/app.min.css">
+    {% endif %}
+</head>
+<body class="h-full antialiased font-sans">
+    <div class="navbar bg-base-900 border-b border-base-800 px-6">
+        <a class="text-xl font-bold text-primary tracking-wider">⚡ SHIPPED HYPERMEDIA</a>
+    </div>
+    <main class="p-8 max-w-6xl mx-auto">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

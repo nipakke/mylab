@@ -1,0 +1,18 @@
+{% for container in containers %}
+<tr class="border-base-800 hover:bg-base-800/40 transition-colors">
+    <td class="font-mono text-xs text-slate-400">{{ container.id }}</td>
+    <td class="font-bold">{{ container.name }}</td>
+    <td>
+        {% if container.status == 'running' %}
+            <span class="badge badge-success badge-sm font-semibold text-xs">{{ container.status }}</span>
+        {% else %}
+            <span class="badge badge-error badge-sm font-semibold text-xs">{{ container.status }}</span>
+        {% endif %}
+    </td>
+    <td class="font-mono text-sm text-slate-300">{{ container.getFormattedMemory() }}</td>
+</tr>
+{% else %}
+<tr>
+    <td colspan="4" class="text-center text-slate-500 py-4">No active nodes detected.</td>
+</tr>
+{% endfor %}

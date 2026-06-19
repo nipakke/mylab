@@ -20,8 +20,11 @@ Thumbs.db
 node_modules/
 package-lock.json
 
-# Turbo
-.turbo
+# Nx
+.nx/cache
+.nx/workspace-data
 
 # OpenCode temp sessions
 .tmp/
+apps/frontend/.turbo/turbo-build.log
+apps/frontend/.turbo/turbo-lint.log

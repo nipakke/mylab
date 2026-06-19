@@ -1,0 +1,49 @@
+{
+  "name": "@dash/frontend",
+  "root": "apps/frontend",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx vite dev",
+        "cwd": "apps/frontend"
+      },
+      "continuous": true
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx vite build",
+        "cwd": "apps/frontend"
+      },
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/vite.config.ts",
+        "{projectRoot}/package.json",
+        "{projectRoot}/src/app.html",
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/svelte.config.js"
+      ],
+      "outputs": [
+        "{workspaceRoot}/apps/backend/public/"
+      ]
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx vite preview",
+        "cwd": "apps/frontend"
+      }
+    },
+    "check": {
+      "command": "svelte-check --tsconfig ./tsconfig.json",
+      "options": { "cwd": "apps/frontend" },
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/tsconfig.json"
+      ]
+    }
+  }
+}

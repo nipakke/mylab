@@ -2,13 +2,11 @@
 	"name": "dash",
 	"private": true,
 	"scripts": {
-		"dev": "turbo run dev",
-		"build": "turbo run build",
-		"lint": "turbo run lint",
-		"check": "turbo run check"
+		"dev": "nx run backend:dev",
+		"test": "nx run backend:test"
 	},
+	"packageManager": "pnpm@11.8.0",
 	"devDependencies": {
-		"turbo": "^2.9.18"
-	},
-	"packageManager": "pnpm@11.8.0"
+		"nx": "^23.0.0"
+	}
 }

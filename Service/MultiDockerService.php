@@ -80,14 +80,13 @@ final class MultiDockerService implements DockerServiceInterface
      * streams have closed.
      *
      * @param  array<string, array<array-key, string>>|null  $filters
-     * @return ReadableStreamInterface
      */
     public function eventsStream(
         ?float $since = null,
         ?float $until = null,
         ?array $filters = null,
     ): ReadableStreamInterface {
-        $merged = new ThroughStream();
+        $merged = new ThroughStream;
         $open = count($this->services);
 
         foreach ($this->services as $service) {
@@ -125,7 +124,7 @@ final class MultiDockerService implements DockerServiceInterface
         $seen = [];
 
         foreach ($containers as $container) {
-            if (!isset($seen[$container->id])) {
+            if (! isset($seen[$container->id])) {
                 $seen[$container->id] = $container;
             }
         }

@@ -9,7 +9,7 @@ use Twig\Loader\FilesystemLoader;
 
 beforeEach(function () {
     // Instantiate isolated mock rendering parameters before each run block
-    $this->loader = new FilesystemLoader(__DIR__.'/../src/views');
+    $this->loader = new FilesystemLoader(__DIR__.'/../views');
     $this->twig = new Environment($this->loader, [
         'cache' => false,
         'strict_variables' => true, // Assures properties match exact DTO schema models

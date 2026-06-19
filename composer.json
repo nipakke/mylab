@@ -14,10 +14,10 @@
   },
   "autoload": {
     "psr-4": {
-      "Shipped\\Backend\\": "src/"
+      "Shipped\\Backend\\": ""
     },
     "files": [
-      "src/Domain/label-parser.php"
+      "Domain/label-parser.php"
     ]
   },
   "config": {
@@ -38,7 +38,7 @@
         "format": "pint",
         "lint": [
             "pint --test",
-            "parallel-lint src/",
+            "parallel-lint Domain/ Handler/ Service/ server.php ServerKernel.php",
             "phpstan analyse --configuration=phpstan.neon"
         ]
     }

@@ -5,8 +5,8 @@ FROM node:22-alpine AS css
 WORKDIR /app
 COPY package.json ./
 RUN npm install --ignore-scripts
-COPY src/assets/ src/assets/
-COPY src/views/ src/views/
+COPY assets/ assets/
+COPY views/ views/
 RUN npm run build:css
 
 # =========================================================================

@@ -1,7 +1,7 @@
 {
-  "watch": ["src"],
+  "watch": ["*.php", "Domain", "Handler", "Service", "views", "assets"],
   "ext": "php,twig",
-  "exec": "php src/server.php",
+  "exec": "php server.php",
   "env": {
     "APP_ENV": "local"
   }

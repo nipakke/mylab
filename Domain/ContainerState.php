@@ -56,7 +56,7 @@ enum ContainerState: string
      * shows warning regardless of the container state — a running
      * container with a failing health check is effectively degraded.
      *
-     * @param  string  $state         Docker State field (running, exited, …)
+     * @param  string  $state  Docker State field (running, exited, …)
      * @param  string  $dockerStatus  Docker Status field (Up 2 hours (healthy), …)
      */
     public static function resolveDotClass(string $state, string $dockerStatus): string

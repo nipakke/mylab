@@ -26,7 +26,7 @@ interface ContainerStoreInterface
      *
      * Rebuilds the link cache after replacement.
      *
-     * @param Container[] $containers
+     * @param  Container[]  $containers
      */
     public function replace(array $containers): void;
 

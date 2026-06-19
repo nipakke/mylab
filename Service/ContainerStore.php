@@ -87,7 +87,7 @@ final class ContainerStore implements ContainerStoreInterface
      * Replace the stored container list with a fresh snapshot
      * and rebuild the link cache.
      *
-     * @param Container[] $containers
+     * @param  Container[]  $containers
      */
     public function replace(array $containers): void
     {

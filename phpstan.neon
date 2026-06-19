@@ -2,6 +2,10 @@ parameters:
     # Level 8 enforces strict typing, return types, and checks for null values
     level: 8
     paths:
-        - src
+        - Domain
+        - Handler
+        - Service
+        - server.php
+        - ServerKernel.php
     excludePaths:
         - vendor

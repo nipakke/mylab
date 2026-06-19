@@ -17,8 +17,8 @@ use Shipped\Backend\Service\ContainerStore;
 use Shipped\Backend\Service\ContainerSyncService;
 use Shipped\Backend\Service\DockerService;
 use Shipped\Backend\Service\DockerServiceInterface;
-use Shipped\Backend\Service\MultiDockerService;
 use Shipped\Backend\Service\IpResolver;
+use Shipped\Backend\Service\MultiDockerService;
 use Shipped\Backend\Service\RateLimiter;
 use Shipped\Backend\Service\SseBroadcaster;
 use Twig\Environment;
@@ -42,7 +42,7 @@ final class ServerKernel
 
         $loader = new FilesystemLoader(__DIR__.'/views');
         $this->twig = new Environment($loader, [
-            'cache' => $this->isDev ? false : __DIR__.'/../cache/twig',
+            'cache' => $this->isDev ? false : __DIR__.'/cache/twig',
             'strict_variables' => true,
         ]);
         $this->twig->addGlobal('is_dev', $this->isDev);
@@ -62,7 +62,7 @@ final class ServerKernel
             if ($host !== false && $host !== '') {
                 $this->dockerService = new DockerService(dsn: $host);
             } else {
-                $this->dockerService = new DockerService();
+                $this->dockerService = new DockerService;
             }
         }
 

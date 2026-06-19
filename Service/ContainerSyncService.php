@@ -137,7 +137,7 @@ final class ContainerSyncService
         }
 
         $json = json_encode($data, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
-        echo "[SSE] Broadcasting update — ".count($data).' groups — '.json_encode(array_keys($data))."\n";
+        echo '[SSE] Broadcasting update — '.count($data).' groups — '.json_encode(array_keys($data))."\n";
         $this->broadcaster->broadcast('container-update', $json);
     }
 

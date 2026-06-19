@@ -28,8 +28,8 @@ final class SseBroadcaster
     /**
      * Register a new SSE client stream.
      *
-     * @param ?callable(string, string): string $transform  Optional per-stream data transform
-     *                                                       (receives event name and raw data,
+     * @param  ?callable(string, string): string  $transform  Optional per-stream data transform
+     *                                                        (receives event name and raw data,
      *                                                        returns transformed data string)
      */
     public function attach(ThroughStream $stream, ?callable $transform = null): void

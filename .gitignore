@@ -31,5 +31,8 @@ package-lock.json
 # Cache
 /cache/
 
+# Generated assets
+/public/assets/css/
+
 # OpenCode temp sessions
 .tmp/

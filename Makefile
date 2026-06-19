@@ -1,4 +1,4 @@
-.PHONY: run build test lint format clean
+.PHONY: run build test lint format clean css
 
 run:
 	APP_ENV=local php src/server.php
@@ -13,6 +13,9 @@ lint:
 	composer lint
 format:
 	composer format
+
+css:
+	npm run build:css
 
 clean:
 	rm -rf cache/twig

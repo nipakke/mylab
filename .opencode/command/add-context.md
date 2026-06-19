@@ -89,7 +89,7 @@ Help users add project patterns using Project Intelligence standard. **Easiest w
 /add-context --update        # Update existing context
 /add-context --tech-stack    # Add/update tech stack only
 /add-context --patterns      # Add/update code patterns only
-/add-context --global        # Save to global config (~/.config/opencode/) instead of project
+
 ```
 
 ---
@@ -131,12 +131,8 @@ Help users add project patterns using Project Intelligence standard. **Easiest w
 
 Determine where project intelligence files should be saved. This runs BEFORE anything else.
 
-**Default behavior**: Always use local `.opencode/context/project-intelligence/`.
-**Override**: `--global` flag saves to `~/.config/opencode/context/project-intelligence/` instead.
-
-**Resolution:**
-1. If `--global` flag → `$CONTEXT_DIR = ~/.config/opencode/context/project-intelligence/`
-2. Otherwise → `$CONTEXT_DIR = .opencode/context/project-intelligence/` (always local)
+**Behavior**: Always use local `.opencode/context/project-intelligence/`.
+`$CONTEXT_DIR = .opencode/context/project-intelligence/`
 
 **If `.opencode/context/` doesn't exist yet**, create it silently — no prompt needed. The directory structure is part of the output shown in Stage 4.
 
@@ -200,7 +196,7 @@ Ready to harvest? [y/n]: _
 
 ### Stage 1: Detect Existing Context
 
-Check: `$CONTEXT_DIR` (set in Stage 0.5 — either `.opencode/context/project-intelligence/` or `~/.config/opencode/context/project-intelligence/`)
+Check: `$CONTEXT_DIR` (set in Stage 0.5 — `.opencode/context/project-intelligence/`)
 
 **If exists**:
 ```
@@ -627,19 +623,7 @@ When you:
 
 Agents stay synced!
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💡 Tip: Global patterns
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Want the same patterns across ALL your projects?
-  /add-context --global
-  → Saves to ~/.config/opencode/context/project-intelligence/
-  → Acts as fallback for projects without local context
-
-Already have global patterns? Bring them into this project:
-  /context migrate
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📚 Learn More
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -880,7 +864,7 @@ Check code & retry.
 A: Check file exists, <200 lines. Run `/context validate`
 
 **Q: See what's in context?**
-A: `cat .opencode/context/project-intelligence/technical-domain.md` (local) or `cat ~/.config/opencode/context/project-intelligence/technical-domain.md` (global)
+A: `cat .opencode/context/project-intelligence/technical-domain.md`
 
 **Q: Multiple context files?**
 A: Yes! Create in your project-intelligence directory. Agents load all.
@@ -891,11 +875,8 @@ A: Edit directly: `nano .opencode/context/project-intelligence/technical-domain.
 **Q: Share w/ team?**
 A: Yes! Use local install (`.opencode/context/project-intelligence/`) and commit to repo. Team members get your patterns automatically.
 
-**Q: Local vs global?**
-A: Local (`.opencode/`) = project-specific, committed to git, team-shared. Global (`~/.config/opencode/`) = personal defaults across all projects. Local overrides global.
-
-**Q: Installed globally but want project patterns?**
-A: Run `/add-context` (defaults to local). Creates `.opencode/context/project-intelligence/` in your project even if OAC was installed globally.
+**Q: Want project-specific patterns?**
+A: Run `/add-context`. Creates `.opencode/context/project-intelligence/` in your project — committed to git, team-shared.
 
 **Q: Have external context files in .tmp/?**
 A: Run `/context harvest` to extract and organize them into permanent context

@@ -13,8 +13,10 @@ use React\Socket\SocketServer;
 use Shipped\Backend\Handler\ContainerRefreshHandler;
 use Shipped\Backend\Handler\HomeHandler;
 use Shipped\Backend\Handler\TelemetryStreamHandler;
+use Shipped\Backend\Service\ContainerSnapshotStore;
 use Shipped\Backend\Service\DockerService;
 use Shipped\Backend\Service\DockerServiceInterface;
+use Shipped\Backend\Workflow\CollectContainersWorkflow;
 use Shipped\Backend\Workflow\ListContainersWorkflow;
 use Shipped\Backend\Workflow\RefreshContainersWorkflow;
 use Shipped\Backend\Workflow\StreamTelemetryWorkflow;
@@ -78,6 +80,13 @@ final class ServerKernel
 
             return new Response(404, ['Content-Type' => 'text/plain'], '404 - Engine Route Missing');
         });
+
+        $containerSnapshotStore = new ContainerSnapshotStore();
+        $collectWorkflow = new CollectContainersWorkflow(
+            $this->dockerService,
+            $containerSnapshotStore,
+        );
+        $collectWorkflow->start();
 
         Loop::addPeriodicTimer(5.0, function (): void {
             echo '[' . date('H:i:s') . "] Async heartbeat — worker alive\n";

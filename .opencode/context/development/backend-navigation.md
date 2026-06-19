@@ -9,30 +9,33 @@
 ## Structure
 
 ```
-development/backend/           # [future]
+development/backend/
 ├── navigation.md
+├── php-standards.md           # ✅ PHP 8.x language feature standards
+├── patterns.md                # ✅ Async design patterns (Handler/Action/Service)
+├── performance.md             # ✅ Production performance (OPcache, JIT, preloading)
 │
-├── api-patterns/              # Approach-based
+├── api-patterns/              # Approach-based [future]
 │   ├── rest-design.md
 │   ├── graphql-design.md
 │   ├── grpc-patterns.md
 │   └── websocket-patterns.md
 │
-├── nodejs/                    # Tech-specific
+├── nodejs/                    # Tech-specific [future]
 │   ├── express-patterns.md
 │   ├── fastify-patterns.md
 │   └── error-handling.md
 │
-├── python/
+├── python/                    # [future]
 │   ├── fastapi-patterns.md
 │   └── django-patterns.md
 │
-├── authentication/            # Functional concern
+├── authentication/            # Functional concern [future]
 │   ├── jwt-patterns.md
 │   ├── oauth-patterns.md
 │   └── session-management.md
 │
-└── middleware/
+└── middleware/                # [future]
     ├── logging.md
     ├── rate-limiting.md
     └── cors.md
@@ -44,9 +47,12 @@ development/backend/           # [future]
 
 | Task | Path |
 |------|------|
+| **PHP language standards** | `backend/php-standards.md` |
+| **Design patterns (Handler/Action/Service)** | `backend/patterns.md` |
+| **Production performance** | `backend/performance.md` |
+| **API design principles** | `principles/api-design.md` |
 | **REST API** | `backend/api-patterns/rest-design.md` [future] |
 | **GraphQL** | `backend/api-patterns/graphql-design.md` [future] |
-| **API design principles** | `principles/api-design.md` |
 | **Node.js** | `backend/nodejs/express-patterns.md` [future] |
 | **Python** | `backend/python/fastapi-patterns.md` [future] |
 | **Auth (JWT)** | `backend/authentication/jwt-patterns.md` [future] |
@@ -61,6 +67,7 @@ development/backend/           # [future]
 
 ## By Language
 
+**PHP** → `backend/php-standards.md`, `backend/patterns.md`, `backend/performance.md`
 **Node.js** → `backend/nodejs/` [future]
 **Python** → `backend/python/` [future]
 

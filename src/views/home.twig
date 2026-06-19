@@ -1,16 +1,6 @@
 {% extends "layout.twig" %}
 
 {% block content %}
-<div class="flex justify-end mb-8">
-    <button hx-post="/containers/refresh"
-            hx-target="#link-cards-container"
-            hx-indicator="#loading-spinner"
-            class="btn btn-primary btn-sm">
-        <span id="loading-spinner" class="loading loading-spinner loading-xs htmx-indicator"></span>
-        Refresh
-    </button>
-</div>
-
 <div id="link-cards-container">
     {% include "partials/link-cards.twig" %}
 </div>

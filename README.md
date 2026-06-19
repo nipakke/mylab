@@ -61,7 +61,6 @@ Runs `composer install --no-dev --optimize-autoloader`. For containerized deploy
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/` | Dashboard homepage — lists all containers |
-| POST | `/containers/refresh` | HTMX partial — refreshes container table |
 | GET | `/containers/stream` | SSE endpoint — push container updates to client |
 | GET | `/dev/reload` | (local only) Triggers nodemon reload |
 
@@ -111,13 +110,11 @@ src/
 ├── server.php                  # Entry point
 ├── ServerKernel.php            # DI, routing, HTTP server setup
 ├── Action/                     # Business logic (use cases)
-│   ├── ListContainers.php
-│   └── RefreshContainers.php
+│   └── ListContainers.php
 ├── Domain/                     # Immutable DTOs
 │   └── Container.php
 ├── Handler/                    # HTTP adapters
-│   ├── HomeHandler.php
-│   └── ContainerRefreshHandler.php
+│   └── HomeHandler.php
 ├── Job/                        # Background jobs
 │   └── CollectContainers.php
 ├── Service/                    # Service layer

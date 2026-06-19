@@ -11,15 +11,17 @@ use Shipped\Backend\Domain\Container;
 
 final class DockerService implements DockerServiceInterface
 {
+    private readonly Client $client;
+
     public function __construct(
-        private readonly ?Client $client = null,
-    ) {}
+        private readonly ?string $dsn = null,
+    ) {
+        $this->client = new Client(null, $this->dsn);
+    }
 
     public function listAll(): PromiseInterface
     {
-        $client = $this->client ?? new Client;
-
-        return $client->containerList(true, true)->then(
+        return $this->client->containerList(true, true)->then(
             fn (array $rawContainers): array => array_map(
                 Container::fromDockerApiResponse(...),
                 $rawContainers,
@@ -37,8 +39,6 @@ final class DockerService implements DockerServiceInterface
      */
     public function eventsStream(?float $since = null, ?float $until = null, ?array $filters = null): ReadableStreamInterface
     {
-        $client = $this->client ?? new Client;
-
-        return $client->eventsStream($since, $until, $filters ?? []);
+        return $this->client->eventsStream($since, $until, $filters ?? []);
     }
 }

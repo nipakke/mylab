@@ -22,7 +22,7 @@
 The project started as a Go backend (single binary, fast, low memory). After experimenting with a SvelteKit + PHP API monorepo on Nx, the complexity of dual build pipelines and type synchronization became a burden. The project needed a simpler stack that could still handle async I/O for Docker API calls and SSE streaming.
 
 ### Decision
-Migrate from Go to PHP 8.2 with ReactPHP as the async event-loop runtime. Use Twig for server-side templates and HTMX/SSE for dynamic frontend behavior — no SPA framework.
+Migrate from Go to PHP 8.2 with ReactPHP as the async event-loop runtime. Use Twig for server-side templates and HTMX for dynamic frontend behavior — no SPA framework.
 
 ### Rationale
 PHP with ReactPHP provides an async event loop similar to Node.js but with PHP's mature ecosystem. The clue/docker-react library offers a first-class async Docker API client. Twig provides secure, performant server-side templating. HTMX eliminates the need for a JavaScript framework entirely. The result is a single-language stack (PHP) with no frontend build step.
@@ -44,27 +44,27 @@ PHP with ReactPHP provides an async event loop similar to Node.js but with PHP's
 
 ---
 
-## Decision: HTMX + SSE instead of a JavaScript framework
+## Decision: HTMX instead of a JavaScript framework
 
 **Date**: 2026-06-19
 **Status**: Decided
 **Owner**: Developer
 
 ### Context
-The dashboard needs dynamic UI updates (container list refresh, real-time telemetry) but doesn't need complex client-side state management. A SPA framework (React, Vue, Svelte) would require a separate build pipeline, API contracts, and state synchronization.
+The dashboard needs dynamic UI updates (container list refresh) but doesn't need complex client-side state management. A SPA framework (React, Vue, Svelte) would require a separate build pipeline, API contracts, and state synchronization.
 
 ### Decision
-Use HTMX for partial page updates (container table refresh via POST /containers/refresh) and Server-Sent Events for real-time telemetry streaming (GET /api/telemetry). All rendering stays server-side in Twig.
+Use HTMX for partial page updates (container table refresh via POST /containers/refresh). All rendering stays server-side in Twig.
 
 ### Rationale
-HTMX extends HTML with declarative attributes for AJAX requests and DOM swaps. SSE is a native browser API for unidirectional server→client streams. Together they cover 100% of the dashboard's dynamic UI needs without a single line of custom JavaScript.
+HTMX extends HTML with declarative attributes for AJAX requests and DOM swaps. Together with server-rendered Twig templates, this covers 100% of the dashboard's dynamic UI needs without a single line of custom JavaScript.
 
 ### Alternatives Considered
 | Alternative | Pros | Cons | Why Rejected? |
 |-------------|------|------|---------------|
 | React/Vue/Svelte SPA | Rich interactivity, ecosystem | Build step, API layer, state management, dual language | Overkill for a dashboard |
-| WebSockets | Bidirectional, low latency | More complex server implementation, connection management | SSE is simpler for unidirectional telemetry |
-| Alpine.js + polling | Lightweight, no build step | Polling is wasteful, less elegant | HTMX partials + SSE is cleaner |
+| WebSockets | Bidirectional, low latency | More complex server implementation, connection management | Not needed for unidirectional updates |
+| Alpine.js + polling | Lightweight, no build step | Polling is wasteful, less elegant | HTMX partials is cleaner |
 
 ### Impact
 - **Positive**: Zero JavaScript to write/maintain, server controls all rendering, simpler deployment
@@ -135,7 +135,7 @@ Decisions that were later overturned:
 |----------|------|-------------|-----|
 | Go backend | 2026-04 | PHP + ReactPHP | Slower iteration, less mature Docker client |
 | Nx monorepo | 2026-06 | Flat PHP project | Orchestration overhead for single app |
-| SvelteKit frontend | 2026-06 | HTMX + SSE | Eliminated dual-language complexity |
+| SvelteKit frontend | 2026-06 | HTMX | Eliminated dual-language complexity |
 | Snapshot history (ContainerSnapshotStore) | 2026-06 | Simple ContainerStore (latest only) | No consumer existed for history; just latest state needed |
 
 ## Onboarding Checklist

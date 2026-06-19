@@ -1,6 +1,6 @@
 # Dash — Docker Container Dashboard
 
-An asynchronous PHP hypermedia monolith for real-time Docker container monitoring. Built with ReactPHP, Twig, HTMX, and SSE — no client-side JavaScript framework required.
+An asynchronous PHP hypermedia monolith for real-time Docker container monitoring. Built with ReactPHP, Twig, and HTMX — no client-side JavaScript framework required.
 
 ## Architecture
 
@@ -17,7 +17,7 @@ FrankenPHP / Caddy (port 8000)
               └── Twig templates (server-rendered HTML)
 ```
 
-The frontend uses **HTMX** for partial page updates and **Server-Sent Events** for real-time telemetry streaming. All rendering happens server-side via Twig — no build step, no SPA.
+The frontend uses **HTMX** for partial page updates. All rendering happens server-side via Twig — no build step, no SPA.
 
 ## Prerequisites
 
@@ -62,7 +62,6 @@ Runs `composer install --no-dev --optimize-autoloader`. For containerized deploy
 |--------|------|-------------|
 | GET | `/` | Dashboard homepage — lists all containers |
 | POST | `/containers/refresh` | HTMX partial — refreshes container table |
-| GET | `/api/telemetry` | SSE stream — system CPU/memory telemetry |
 
 ## Project Structure
 
@@ -72,15 +71,12 @@ src/
 ├── ServerKernel.php            # DI, routing, HTTP server setup
 ├── Action/                     # Business logic (use cases)
 │   ├── ListContainers.php
-│   ├── RefreshContainers.php
-│   └── StreamTelemetry.php
+│   └── RefreshContainers.php
 ├── Domain/                     # Immutable DTOs
-│   ├── Container.php
-│   └── TelemetrySnapshot.php
+│   └── Container.php
 ├── Handler/                    # HTTP adapters
 │   ├── HomeHandler.php
-│   ├── ContainerRefreshHandler.php
-│   └── TelemetryStreamHandler.php
+│   └── ContainerRefreshHandler.php
 ├── Job/                        # Background jobs
 │   └── CollectContainers.php
 ├── Service/                    # Service layer

@@ -1,55 +1,17 @@
 {% extends "layout.twig" %}
 
 {% block content %}
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div hx-ext="sse" sse-connect="/api/telemetry" sse-swap="message" class="card bg-base-900 border border-base-800 shadow-xl">
-        <div class="card-body">
-            <h2 class="card-title text-sm text-slate-400 uppercase tracking-wider">Core Telemetry Pulse</h2>
-            <div class="text-2xl font-mono text-emerald-400 mt-2">Connecting...</div>
-            <script>
-                document.body.addEventListener('htmx:sseMessage', function(e) {
-                    const data = JSON.parse(e.detail.data);
-                    e.target.innerHTML = `
-                        <div class="space-y-1 text-sm font-mono">
-                            <p class="text-xs text-slate-500">Sync: ${data.time}</p>
-                            <p>CPU usage: <span class="text-primary font-bold">${data.cpu}</span></p>
-                            <p>RAM usage: <span class="text-secondary font-bold">${data.memory}</span></p>
-                        </div>
-                    `;
-                });
-            </script>
-        </div>
-    </div>
+<div class="flex justify-end mb-8">
+    <button hx-post="/containers/refresh"
+            hx-target="#link-cards-container"
+            hx-indicator="#loading-spinner"
+            class="btn btn-primary btn-sm">
+        <span id="loading-spinner" class="loading loading-spinner loading-xs htmx-indicator"></span>
+        Refresh
+    </button>
 </div>
 
-<div class="card bg-base-900 border border-base-800 shadow-xl">
-    <div class="card-body">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="card-title text-xl font-bold">Managed Daemons</h2>
-            <button hx-post="/containers/refresh" 
-                    hx-target="#container-table-body" 
-                    hx-indicator="#loading-spinner"
-                    class="btn btn-primary btn-sm">
-                <span id="loading-spinner" class="loading loading-spinner loading-xs htmx-indicator"></span>
-                Refresh Nodes
-            </button>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="table table-zebra w-full">
-                <thead>
-                    <tr class="border-base-800 text-slate-400">
-                        <th>Container ID</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Memory Allocation</th>
-                    </tr>
-                </thead>
-                <tbody id="container-table-body">
-                    {% include "partials/container-rows.twig" %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+<div id="link-cards-container">
+    {% include "partials/link-cards.twig" %}
 </div>
 {% endblock %}

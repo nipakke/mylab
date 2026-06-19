@@ -48,8 +48,7 @@
 
 ### What Works Well
 - **HTMX partials for table refresh** — Zero JavaScript, clean separation. The `/containers/refresh` endpoint returns exactly the rows needed, and HTMX swaps them in.
-- **SSE for telemetry** — ReactPHP's `ThroughStream` makes SSE trivial. The `StreamTelemetry` action is under 30 lines.
-- **Immutable DTOs** — `Container` and `TelemetrySnapshot` as readonly classes prevent accidental mutation in async context.
+- **Immutable DTOs** — `Container` as a readonly class prevents accidental mutation in async context.
 - **Handler → Action → Service layering** — Thin handlers, focused actions, swappable services. Easy to test each layer independently.
 
 ### What Could Be Better
@@ -60,7 +59,7 @@
 ### Patterns & Conventions
 
 ### Code Patterns Worth Preserving
-- **Action as use-case** — Each Action class does one thing (ListContainers, RefreshContainers, StreamTelemetry). Returns a ReactPHP Promise for async operations.
+- **Action as use-case** — Each Action class does one thing (ListContainers, RefreshContainers). Returns a ReactPHP Promise for async operations.
 - **Handler as thin adapter** — Handlers only parse the request, delegate to Action, and format the Response. No business logic in handlers.
 - **Immutable DTOs with readonly properties** — PHP 8.2 readonly classes prevent accidental mutation.
 - **Twig layout inheritance** — `layout.twig` defines base HTML shell; `home.twig` extends it; `container-rows.twig` is a reusable partial.
@@ -69,13 +68,13 @@
 - **ReactPHP is event-loop based** — Blocking I/O (file_get_contents, PDO) will stall the entire server. Always use async I/O.
 - **Twig templates are recompiled in dev** — Set `APP_ENV=prod` to use cached templates. Cache directory is `cache/twig/`.
 - **ContainerStore is in-memory only** — Restarting the server loses state. This is by design — Docker state is inherently ephemeral.
-- **SSE connection stays open** — Each client holds a connection. ReactPHP handles this efficiently but it's worth monitoring.
+
 
 ## Active Work
 
 | Area | Goal | Status |
 |------|------|--------|
-| Core dashboard | Container listing + telemetry | Done |
+| Core dashboard | Container listing | Done |
 | Background collection | Periodic Docker polling every 10s → ContainerStore | Done |
 | Error handling | Graceful failure states | Pending |
 | Container actions | Start/stop/restart via HTMX | Planned |

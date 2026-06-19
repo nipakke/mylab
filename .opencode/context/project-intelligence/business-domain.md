@@ -15,7 +15,7 @@
 - **Project Name**: Dash
 - **Tagline**: Real-time Docker container monitoring, zero JavaScript required
 - **Problem Statement**: Developers running Docker containers need a quick visual overview of container status, resource usage, and health — without switching to the terminal or setting up complex monitoring stacks.
-- **Solution**: A lightweight, self-hosted web dashboard that connects to the Docker socket, displays live container data via HTMX partials, and streams system telemetry via SSE. Runs in a single binary with no external dependencies.
+- **Solution**: A lightweight, self-hosted web dashboard that connects to the Docker socket and displays live container data via HTMX partials. Runs in a single binary with no external dependencies.
 
 ## Target Users
 
@@ -29,12 +29,11 @@
 
 **For Developers**:
 - One-page view of all Docker containers with status, memory, and labels
-- Real-time system telemetry (CPU, memory) — no refresh needed
 - Auto-refreshes container list via HTMX partials
 - Zero configuration — just point it at the Docker socket
 
 **For the Project**:
-- Demonstrates the hypermedia architecture pattern (HTMX + SSE + server-rendered HTML)
+- Demonstrates the hypermedia architecture pattern (HTMX + server-rendered HTML)
 - Serves as a reference implementation for ReactPHP + Twig + Docker API
 - Lightweight enough to run alongside development containers
 
@@ -43,9 +42,9 @@
 | Metric | Definition | Target | Current |
 |--------|------------|--------|---------|
 | Works with Docker | Lists all running containers correctly | 100% | Works |
-| Real-time updates | Container refresh and telemetry streaming | <2s latency | 2s interval |
+| Real-time updates | Container refresh via HTMX partials | <2s | Sub-second with caching |
 | Single binary deploy | Runs via Docker with no external services | Yes | Dockerfile exists |
-| Zero JS framework | No React/Vue/Svelte on the frontend | Yes | HTMX + SSE only |
+| Zero JS framework | No React/Vue/Svelte on the frontend | Yes | HTMX only |
 
 ## Key Stakeholders
 
@@ -56,7 +55,7 @@
 
 ## Roadmap Context
 
-**Current Focus**: Stable container listing + telemetry streaming
+**Current Focus**: Stable container listing
 **Next Milestone**: Container log viewing, start/stop/restart actions
 **Long-term Vision**: Full Docker management dashboard — images, volumes, networks, compose stacks
 

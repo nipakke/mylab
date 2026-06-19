@@ -2,7 +2,7 @@
 
 # Technical Domain — Dash
 
-> PHP hypermedia monolith for real-time Docker container monitoring. Server-rendered HTML with HTMX and SSE — no client-side JavaScript framework.
+> PHP hypermedia monolith for real-time Docker container monitoring. Server-rendered HTML with HTMX — no client-side JavaScript framework.
 
 ## Quick Reference
 
@@ -19,7 +19,7 @@
 | Templates | Twig | ^3.0 | Server-side rendering, template inheritance, safe output |
 | Routing | FastRoute | ^1.3 | Simple, fast regex-based router (by Nikita Popov) |
 | Docker API | clue/docker-react | ^1.6 | Async Docker Engine API client on ReactPHP event loop |
-| Frontend | HTMX + SSE | CDN | Hypermedia-driven UI — partial swaps, real-time streaming |
+| Frontend | HTMX | CDN | Hypermedia-driven UI — partial swaps |
 | CSS | Tailwind CSS + daisyUI | CDN (dev) / compiled (prod) | Utility-first CSS with component library |
 | Server | FrankenPHP + Caddy | Dockerfile | Production-grade PHP app server with auto-SSL |
 | Testing | Pest | ^3.0 | Elegant PHP testing with strict type assertions |
@@ -30,11 +30,11 @@
 ```
 Type: Hypermedia Monolith
 Pattern: Handler → Action → Service → External API
-         └── Twig renders HTML (HTMX/SSE for dynamic behavior)
+         └── Twig renders HTML (HTMX for dynamic behavior)
 ```
 
 ```
-Browser (HTMX + SSE)
+Browser (HTMX)
        │
        ▼
 FrankenPHP / Caddy (port 8000)
@@ -50,7 +50,7 @@ FrankenPHP / Caddy (port 8000)
 
 ### Why This Architecture?
 
-The hypermedia monolith pattern was chosen to eliminate the complexity of a SPA frontend. Instead of maintaining a separate JavaScript application with API contracts, state management, and build tooling, all rendering happens server-side. HTMX handles partial page updates via declarative HTML attributes, and SSE provides real-time streaming — both without writing any JavaScript.
+The hypermedia monolith pattern was chosen to eliminate the complexity of a SPA frontend. Instead of maintaining a separate JavaScript application with API contracts, state management, and build tooling, all rendering happens server-side. HTMX handles partial page updates via declarative HTML attributes — without writing any JavaScript.
 
 **Alternatives considered**: 
 - SvelteKit + PHP API (monorepo) — rejected: unnecessary complexity, dual build pipelines, type sync overhead
@@ -66,31 +66,32 @@ src/
 │
 ├── Action/                     # Business logic (use-case layer)
 │   ├── ListContainers.php      # Fetches containers → renders home.twig (async Promise)
-│   ├── RefreshContainers.php   # Re-fetches → renders container-rows.twig for HTMX swap
-│   └── StreamTelemetry.php     # SSE stream — emits CPU/memory telemetry every 2s
+│   └── RefreshContainers.php   # Re-fetches → renders container-rows.twig for HTMX swap
 │
 ├── Domain/                     # Immutable Data Transfer Objects
-│   ├── Container.php           # id, name, status, memoryUsageBytes, labels
-│   └── TelemetrySnapshot.php   # time, cpu, memory (for SSE JSON)
+│   └── Container.php           # id, name, status, memoryUsageBytes, labels
 │
 ├── Handler/                    # HTTP adapter layer (thin — delegates to Action)
 │   ├── HomeHandler.php         # GET / → ListContainers → HTML Response
-│   ├── ContainerRefreshHandler.php  # POST /containers/refresh → HTML partial
-│   └── TelemetryStreamHandler.php   # GET /api/telemetry → SSE Response
+│   └── ContainerRefreshHandler.php  # POST /containers/refresh → HTML partial
 │
 ├── Job/                        # Background recurring tasks
 │   └── CollectContainers.php   # Periodic (10s) → ContainerStore
 │
 ├── Service/                    # Service / infrastructure layer
 │   ├── ContainerStore.php            # In-memory store — latest container list
-│   ├── DockerServiceInterface.php   # Contract: listAll(), getTelemetry()
-│   └── DockerService.php            # clue/docker-react + system telemetry
+│   ├── DockerServiceInterface.php   # Contract: listAll(), eventsStream()
+│   └── DockerService.php            # clue/docker-react Docker API client
+│
+├── Domain/                     # Domain utilities
+│   └── label-parser.php        # Docker label parsing logic
 │
 └── views/                      # Twig templates
-    ├── layout.twig             # Base HTML (HTMX, SSE, Tailwind, daisyUI)
-    ├── home.twig               # Main page: telemetry card + container table
+    ├── layout.twig             # Base HTML (HTMX, Tailwind, daisyUI)
+    ├── home.twig               # Main page: container table
     └── partials/
-        └── container-rows.twig # Table rows for HTMX swap
+        ├── container-rows.twig # Table rows for HTMX swap
+        └── link-cards.twig     # Dashboard navigation links
 ```
 
 **Key Directories**:
@@ -106,7 +107,6 @@ src/
 |--------|------|---------|--------|-------------|
 | GET | `/` | HomeHandler | ListContainers | Full page render |
 | POST | `/containers/refresh` | ContainerRefreshHandler | RefreshContainers | HTMX partial swap |
-| GET | `/api/telemetry` | TelemetryStreamHandler | StreamTelemetry | SSE stream (2s interval) |
 
 ## Key Technical Decisions
 
@@ -115,7 +115,6 @@ src/
 | ReactPHP event loop | Single-process async — no nginx, no FPM, no process managers | Simpler deployment, lower resource usage |
 | Server-rendered HTML (no SPA) | Eliminates frontend build step, API contracts, state sync | Faster development, fewer moving parts |
 | HTMX for dynamic UI | Declarative partial updates in HTML attributes | No JavaScript to write for interactivity |
-| SSE for real-time data | Unidirectional server→client stream, native browser support | No WebSocket complexity needed |
 | Immutable domain DTOs | Thread-safe, predictable, easy to test | Safer concurrent access in async context |
 | In-memory container store | Latest container list only — no history | Fast reads, simple, no persistence needed for ephemeral data |
 
@@ -124,7 +123,6 @@ src/
 | System | Purpose | Protocol | Direction |
 |--------|---------|----------|-----------|
 | Docker Engine API | Container listing, inspection | HTTP (Unix socket) | Outbound |
-| System (/proc) | CPU/memory telemetry | Filesystem read | Internal |
 
 ## Development Environment
 
@@ -142,7 +140,7 @@ Linting: ./vendor/bin/pint (or make lint)
 Environment: Production Docker container
 Platform: FrankenPHP + Caddy (Dockerfile)
 CI/CD: Not yet configured
-Monitoring: SSE telemetry stream (same as UI)
+Monitoring: Your monitoring tool of choice
 ```
 
 ## Onboarding Checklist

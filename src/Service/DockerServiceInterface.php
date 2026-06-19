@@ -7,7 +7,6 @@ namespace Shipped\Backend\Service;
 use React\Promise\PromiseInterface;
 use React\Stream\ReadableStreamInterface;
 use Shipped\Backend\Domain\Container;
-use Shipped\Backend\Domain\TelemetrySnapshot;
 
 interface DockerServiceInterface
 {
@@ -17,11 +16,6 @@ interface DockerServiceInterface
      * @return PromiseInterface<Container[]> Resolves to an array of Container DTOs
      */
     public function listAll(): PromiseInterface;
-
-    /**
-     * Collect current system telemetry snapshot.
-     */
-    public function getTelemetry(): TelemetrySnapshot;
 
     /**
      * Stream Docker daemon events as a ReactPHP readable stream.

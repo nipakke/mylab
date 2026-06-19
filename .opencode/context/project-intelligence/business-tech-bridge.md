@@ -14,7 +14,6 @@
 | Business Need | Technical Solution | Why This Mapping | Business Value |
 |---------------|-------------------|------------------|----------------|
 | See all Docker containers at a glance | Docker API → Container DTOs → Twig table | Direct socket connection, no agents needed | No setup, instant visibility |
-| Real-time system resource monitoring | SSE stream from /api/telemetry | ReactPHP ThroughStream, 2s interval | Live CPU/memory without page refresh |
 | Auto-refreshing container list | HTMX POST /containers/refresh | Returns partial HTML, HTMX swaps DOM | Always current without manual refresh |
 | Simple deployment | Single Dockerfile (FrankenPHP + Caddy) | Multi-stage build, compiled Tailwind | One container to run |
 | Zero-config setup | Docker socket access only | Unix socket connection via clue/docker-react | No API keys, no agent, no registration |
@@ -36,21 +35,6 @@
 **Connection**:
 Without this feature, the project has no purpose. The technical choice of server-rendered Twig templates means every page load gets fresh container data without client-side state management. HTMX handles partial refreshes — the user clicks "Refresh" and gets new rows without a full page reload.
 
-### Feature: Real-Time Telemetry
-
-**Business Context**:
-- User need: Monitor host system CPU and memory usage in real time
-- Business goal: Provide system health context alongside container status
-- Priority: High — differentiates from basic `docker ps` output
-
-**Technical Implementation**:
-- Solution: GET `/api/telemetry` → TelemetryStreamHandler → StreamTelemetry → SSE stream (2s interval)
-- Architecture: ReactPHP ThroughStream reads /proc/stat and /proc/meminfo, emits JSON every 2 seconds
-- Trade-offs: SSE (unidirectional) vs WebSocket (bidirectional) — SSE is simpler and sufficient for telemetry
-
-**Connection**:
-SSE provides a persistent, low-overhead stream from server to browser. The browser's native EventSource API consumes it without any JavaScript library. Each 2-second snapshot includes CPU percentage and memory usage — enough granularity for monitoring without overwhelming the connection.
-
 ### Feature: Periodic Container Collection (Simplified)
 
 **Business Context**:
@@ -70,16 +54,16 @@ Decoupling the read path from the Docker API means the home page loads instantly
 
 | Situation | Business Priority | Technical Priority | Decision Made | Rationale |
 |-----------|-------------------|-------------------|---------------|-----------|
-| Frontend framework | Simple, fast to build | Maintainable, scalable | No framework (HTMX + SSE) | Dashboard is simple enough; SPA complexity not justified |
-| Real-time updates | Live telemetry visible | Efficient server resources | SSE (not WebSocket) | Unidirectional data flow; SSE is simpler and sufficient |
+| Frontend framework | Simple, fast to build | Maintainable, scalable | No framework (HTMX) | Dashboard is simple enough; SPA complexity not justified |
+| Real-time updates | Responsive UI | Efficient server resources | HTMX partials | Server-rendered, no SPA complexity |
 | Data freshness | Near real-time container status | Don't overload Docker daemon | 10s polling + in-memory store + fresh-on-refresh | Good balance of freshness and performance |
-| Language choice | Fast iteration, easy maintenance | Async I/O for Docker/SSE | PHP + ReactPHP | PHP's iteration speed + ReactPHP's async event loop |
+| Language choice | Fast iteration, easy maintenance | Async I/O for Docker | PHP + ReactPHP | PHP's iteration speed + ReactPHP's async event loop |
 
 ## Common Misalignments
 
 | Misalignment | Warning Signs | Resolution Approach |
 |--------------|---------------|---------------------|
-| Adding SPA complexity | Someone proposes "let's add React for better UI" | Evaluate: does the feature actually need client-side state? HTMX + SSE already covers dynamic updates. |
+| Adding SPA complexity | Someone proposes "let's add React for better UI" | Evaluate: does the feature actually need client-side state? HTMX already covers dynamic updates. |
 | Over-engineering infrastructure | Proposing Redis, message queues, microservices | Ask: is this a single-user dashboard or a multi-tenant SaaS? Keep it simple. |
 | Premature optimization | Optimizing for thousands of containers | Current target is solo devs with <100 containers. Profile before optimizing. |
 
@@ -87,7 +71,7 @@ Decoupling the read path from the Docker API means the home page loads instantly
 
 **For the Developer**:
 - Every technical choice serves the goal of simplicity — zero-config, single binary, no JavaScript framework
-- The hypermedia architecture (HTMX + SSE) is a deliberate pattern, not a limitation
+- The hypermedia architecture (HTMX) is a deliberate pattern, not a limitation
 
 **For Potential Contributors**:
 - Read `decisions-log.md` to understand why things are the way they are

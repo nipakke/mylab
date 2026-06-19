@@ -1,22 +1,55 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 text-slate-100" data-theme="dark">
+<html lang="en" class="h-full" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
 
     <script src="https://unpkg.com/htmx.org@2.0.0"></script>
-    <script src="https://unpkg.com/htmx-ext-sse@2.0.0"></script>
 
     {% if is_dev %}
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.0.0/dist/full.css" />
     {% else %}
         <link rel="stylesheet" href="/assets/css/app.min.css">
     {% endif %}
+
+    <style>
+        [data-theme="dark"] {
+            color-scheme: dark;
+            --color-base-100: oklch(20% 0.01 260);
+            --color-base-200: oklch(24% 0.01 260);
+            --color-base-300: oklch(30% 0.01 260);
+            --color-base-content: oklch(85% 0.01 260);
+            --color-primary: oklch(58% 0.08 250);
+            --color-primary-content: oklch(96% 0.01 250);
+            --color-secondary: oklch(50% 0.06 290);
+            --color-secondary-content: oklch(96% 0.01 290);
+            --color-accent: oklch(55% 0.10 180);
+            --color-accent-content: oklch(96% 0.01 180);
+            --color-neutral: oklch(35% 0.02 260);
+            --color-neutral-content: oklch(85% 0.01 260);
+            --color-info: oklch(55% 0.12 220);
+            --color-info-content: oklch(96% 0.01 220);
+            --color-success: oklch(55% 0.15 145);
+            --color-success-content: oklch(96% 0.01 145);
+            --color-warning: oklch(65% 0.15 85);
+            --color-warning-content: oklch(15% 0.01 85);
+            --color-error: oklch(52% 0.18 25);
+            --color-error-content: oklch(96% 0.01 25);
+            --radius-selector: 0.5rem;
+            --radius-field: 0.375rem;
+            --radius-box: 0.5rem;
+            --size-selector: 0.25rem;
+            --size-field: 0.25rem;
+            --border: 1px;
+            --depth: 0;
+            --noise: 0;
+        }
+    </style>
 </head>
-<body class="h-full antialiased font-sans">
-    <div class="navbar bg-base-900 border-b border-base-800 px-6">
+<body class="h-full antialiased font-sans bg-base-100 text-base-content">
+    <div class="navbar bg-base-200 border-b border-base-300 px-6">
         <a class="text-xl font-bold text-primary tracking-wider">⚡ SHIPPED HYPERMEDIA</a>
     </div>
     <main class="p-8 max-w-6xl mx-auto">

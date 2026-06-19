@@ -11,12 +11,9 @@ use React\EventLoop\Loop;
 use React\Http\HttpServer;
 use React\Http\Message\Response;
 use React\Socket\SocketServer;
-use Shipped\Backend\Action\ListContainers;
 use Shipped\Backend\Action\RefreshContainers;
-use Shipped\Backend\Action\StreamTelemetry;
 use Shipped\Backend\Handler\ContainerRefreshHandler;
 use Shipped\Backend\Handler\HomeHandler;
-use Shipped\Backend\Handler\TelemetryStreamHandler;
 use Shipped\Backend\Service\ContainerStore;
 use Shipped\Backend\Service\ContainerSyncService;
 use Shipped\Backend\Service\DockerService;
@@ -48,27 +45,19 @@ final class ServerKernel
     {
         $containerStore = new ContainerStore;
 
-        $homeHandler = new HomeHandler(
-            new ListContainers($containerStore, $this->twig),
-        );
+        $homeHandler = new HomeHandler($containerStore, $this->twig);
 
         $refreshHandler = new ContainerRefreshHandler(
             new RefreshContainers($this->dockerService, $containerStore, $this->twig),
-        );
-
-        $telemetryHandler = new TelemetryStreamHandler(
-            new StreamTelemetry($this->dockerService),
         );
 
         $dispatcher = FastRoute\simpleDispatcher(
             function (FastRoute\RouteCollector $r) use (
                 $homeHandler,
                 $refreshHandler,
-                $telemetryHandler,
             ): void {
                 $r->addRoute('GET', '/', $homeHandler);
                 $r->addRoute('POST', '/containers/refresh', $refreshHandler->handle(...));
-                $r->addRoute('GET', '/api/telemetry', $telemetryHandler->handle(...));
             }
         );
 

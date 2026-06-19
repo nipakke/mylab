@@ -30,7 +30,7 @@ final class HomeHandler
     public function __invoke(ServerRequestInterface $request): PromiseInterface
     {
         return $this->action->handle()->then(
-            fn(string $html): Response => new Response(
+            fn (string $html): Response => new Response(
                 200,
                 ['Content-Type' => 'text/html'],
                 $html,

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Shipped\Backend\Action;
@@ -21,7 +22,7 @@ final class StreamTelemetry
      */
     public function execute(): ThroughStream
     {
-        $stream = new ThroughStream();
+        $stream = new ThroughStream;
 
         $timer = Loop::addPeriodicTimer(2.0, function () use ($stream): void {
             $snapshot = $this->docker->getTelemetry();

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Shipped\Backend\Service;
@@ -18,8 +19,6 @@ interface DockerServiceInterface
 
     /**
      * Collect current system telemetry snapshot.
-     *
-     * @return TelemetrySnapshot
      */
     public function getTelemetry(): TelemetrySnapshot;
 }

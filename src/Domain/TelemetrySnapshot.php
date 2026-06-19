@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Shipped\Backend\Domain;
@@ -26,8 +27,8 @@ final readonly class TelemetrySnapshot
     public function toArray(): array
     {
         return [
-            'time'   => $this->time,
-            'cpu'    => $this->cpu,
+            'time' => $this->time,
+            'cpu' => $this->cpu,
             'memory' => $this->memory,
         ];
     }

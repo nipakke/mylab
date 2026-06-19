@@ -51,7 +51,7 @@ Without this feature, the project has no purpose. The technical choice of server
 **Connection**:
 SSE provides a persistent, low-overhead stream from server to browser. The browser's native EventSource API consumes it without any JavaScript library. Each 2-second snapshot includes CPU percentage and memory usage — enough granularity for monitoring without overwhelming the connection.
 
-### Feature: Periodic Container Collection
+### Feature: Periodic Container Collection (Simplified)
 
 **Business Context**:
 - User need: Fast page loads without waiting for Docker API on every request
@@ -59,12 +59,12 @@ SSE provides a persistent, low-overhead stream from server to browser. The brows
 - Priority: Medium — performance optimization
 
 **Technical Implementation**:
-- Solution: Background CollectContainers job runs every 10s → stores in ContainerSnapshotStore (circular buffer, 60 snapshots)
+- Solution: Background CollectContainers job runs every 10s → stores latest list in ContainerStore
 - Architecture: ReactPHP periodic timer → DockerService::listAll() → in-memory store → Handlers read from store
-- Trade-offs: Up to 10s staleness vs instant Docker API calls — acceptable for monitoring dashboard
+- Trade-offs: Up to 10s staleness for home page loads vs instant Docker API calls; manual refresh always fetches fresh
 
 **Connection**:
-Decoupling the read path from the Docker API means the home page loads instantly from memory. The 10s collection interval keeps data reasonably fresh without hammering the Docker daemon. The circular buffer prevents memory leaks (max 60 snapshots = 10 minutes of history).
+Decoupling the read path from the Docker API means the home page loads instantly from memory. The 10s collection interval keeps data reasonably fresh without hammering the Docker daemon. Manual refresh (POST /containers/refresh) triggers a fresh Docker API call and updates the store, so the user always gets current data on demand.
 
 ## Trade-off Decisions
 
@@ -72,7 +72,7 @@ Decoupling the read path from the Docker API means the home page loads instantly
 |-----------|-------------------|-------------------|---------------|-----------|
 | Frontend framework | Simple, fast to build | Maintainable, scalable | No framework (HTMX + SSE) | Dashboard is simple enough; SPA complexity not justified |
 | Real-time updates | Live telemetry visible | Efficient server resources | SSE (not WebSocket) | Unidirectional data flow; SSE is simpler and sufficient |
-| Data freshness | Near real-time container status | Don't overload Docker daemon | 10s polling + in-memory cache | Good balance of freshness and performance |
+| Data freshness | Near real-time container status | Don't overload Docker daemon | 10s polling + in-memory store + fresh-on-refresh | Good balance of freshness and performance |
 | Language choice | Fast iteration, easy maintenance | Async I/O for Docker/SSE | PHP + ReactPHP | PHP's iteration speed + ReactPHP's async event loop |
 
 ## Common Misalignments

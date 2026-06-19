@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Shipped\Backend\Handler;
@@ -38,9 +39,9 @@ final class TelemetryStreamHandler
         return new Response(
             200,
             [
-                'Content-Type'  => 'text/event-stream',
+                'Content-Type' => 'text/event-stream',
                 'Cache-Control' => 'no-cache',
-                'Connection'    => 'keep-alive',
+                'Connection' => 'keep-alive',
             ],
             $stream,
         );

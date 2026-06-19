@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Shipped\Backend;
@@ -10,46 +11,49 @@ use React\EventLoop\Loop;
 use React\Http\HttpServer;
 use React\Http\Message\Response;
 use React\Socket\SocketServer;
-use Shipped\Backend\Handler\ContainerRefreshHandler;
-use Shipped\Backend\Handler\HomeHandler;
-use Shipped\Backend\Handler\TelemetryStreamHandler;
-use Shipped\Backend\Service\ContainerSnapshotStore;
-use Shipped\Backend\Service\DockerService;
-use Shipped\Backend\Service\DockerServiceInterface;
 use Shipped\Backend\Action\ListContainers;
 use Shipped\Backend\Action\RefreshContainers;
 use Shipped\Backend\Action\StreamTelemetry;
+use Shipped\Backend\Handler\ContainerRefreshHandler;
+use Shipped\Backend\Handler\HomeHandler;
+use Shipped\Backend\Handler\TelemetryStreamHandler;
 use Shipped\Backend\Job\CollectContainers;
+use Shipped\Backend\Service\ContainerStore;
+use Shipped\Backend\Service\DockerService;
+use Shipped\Backend\Service\DockerServiceInterface;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
 final class ServerKernel
 {
     private readonly DockerServiceInterface $dockerService;
+
     private readonly Environment $twig;
 
     public function __construct()
     {
         $isDev = getenv('APP_ENV') === 'local';
 
-        $loader = new FilesystemLoader(__DIR__ . '/views');
+        $loader = new FilesystemLoader(__DIR__.'/views');
         $this->twig = new Environment($loader, [
-            'cache'            => $isDev ? false : __DIR__ . '/../cache/twig',
+            'cache' => $isDev ? false : __DIR__.'/../cache/twig',
             'strict_variables' => true,
         ]);
         $this->twig->addGlobal('is_dev', $isDev);
 
-        $this->dockerService = new DockerService(new Client());
+        $this->dockerService = new DockerService(new Client);
     }
 
     public function run(): void
     {
+        $containerStore = new ContainerStore;
+
         $homeHandler = new HomeHandler(
-            new ListContainers($this->dockerService, $this->twig),
+            new ListContainers($containerStore, $this->twig),
         );
 
         $refreshHandler = new ContainerRefreshHandler(
-            new RefreshContainers($this->dockerService, $this->twig),
+            new RefreshContainers($this->dockerService, $containerStore, $this->twig),
         );
 
         $telemetryHandler = new TelemetryStreamHandler(
@@ -81,15 +85,14 @@ final class ServerKernel
             return new Response(404, ['Content-Type' => 'text/plain'], '404 - Engine Route Missing');
         });
 
-        $containerSnapshotStore = new ContainerSnapshotStore();
         $collectJob = new CollectContainers(
             $this->dockerService,
-            $containerSnapshotStore,
+            $containerStore,
         );
         $collectJob->start();
 
         Loop::addPeriodicTimer(5.0, function (): void {
-            echo '[' . date('H:i:s') . "] Async heartbeat — worker alive\n";
+            echo '['.date('H:i:s')."] Async heartbeat — worker alive\n";
         });
 
         $socket = new SocketServer('127.0.0.1:8080');

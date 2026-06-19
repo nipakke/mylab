@@ -68,7 +68,7 @@
 ### Gotchas for Maintainers
 - **ReactPHP is event-loop based** — Blocking I/O (file_get_contents, PDO) will stall the entire server. Always use async I/O.
 - **Twig templates are recompiled in dev** — Set `APP_ENV=prod` to use cached templates. Cache directory is `cache/twig/`.
-- **ContainerSnapshotStore is in-memory only** — Restarting the server loses history. This is by design.
+- **ContainerStore is in-memory only** — Restarting the server loses state. This is by design — Docker state is inherently ephemeral.
 - **SSE connection stays open** — Each client holds a connection. ReactPHP handles this efficiently but it's worth monitoring.
 
 ## Active Work
@@ -76,7 +76,7 @@
 | Area | Goal | Status |
 |------|------|--------|
 | Core dashboard | Container listing + telemetry | Done |
-| Background collection | Periodic Docker polling every 10s | Done |
+| Background collection | Periodic Docker polling every 10s → ContainerStore | Done |
 | Error handling | Graceful failure states | Pending |
 | Container actions | Start/stop/restart via HTMX | Planned |
 | Testing | Expand test coverage to Action/Service layers | Planned |

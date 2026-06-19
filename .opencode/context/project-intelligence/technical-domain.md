@@ -79,12 +79,12 @@ src/
 │   └── TelemetryStreamHandler.php   # GET /api/telemetry → SSE Response
 │
 ├── Job/                        # Background recurring tasks
-│   └── CollectContainers.php   # Periodic (10s) → ContainerSnapshotStore
+│   └── CollectContainers.php   # Periodic (10s) → ContainerStore
 │
 ├── Service/                    # Service / infrastructure layer
+│   ├── ContainerStore.php            # In-memory store — latest container list
 │   ├── DockerServiceInterface.php   # Contract: listAll(), getTelemetry()
-│   ├── DockerService.php            # clue/docker-react + system telemetry
-│   └── ContainerSnapshotStore.php   # In-memory circular buffer (60 snapshots)
+│   └── DockerService.php            # clue/docker-react + system telemetry
 │
 └── views/                      # Twig templates
     ├── layout.twig             # Base HTML (HTMX, SSE, Tailwind, daisyUI)
@@ -117,7 +117,7 @@ src/
 | HTMX for dynamic UI | Declarative partial updates in HTML attributes | No JavaScript to write for interactivity |
 | SSE for real-time data | Unidirectional server→client stream, native browser support | No WebSocket complexity needed |
 | Immutable domain DTOs | Thread-safe, predictable, easy to test | Safer concurrent access in async context |
-| In-memory snapshot store | Circular buffer of last 60 snapshots (10 min history) | Fast reads, no persistence needed for ephemeral data |
+| In-memory container store | Latest container list only — no history | Fast reads, simple, no persistence needed for ephemeral data |
 
 ## Integration Points
 

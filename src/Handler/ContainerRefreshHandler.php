@@ -35,7 +35,7 @@ final class ContainerRefreshHandler
     public function handle(ServerRequestInterface $request): PromiseInterface
     {
         return $this->action->execute()->then(
-            fn(string $html): Response => new Response(
+            fn (string $html): Response => new Response(
                 200,
                 ['Content-Type' => 'text/html'],
                 $html,

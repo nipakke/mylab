@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Shipped\Backend\Domain;
@@ -6,7 +7,7 @@ namespace Shipped\Backend\Domain;
 class Container
 {
     /**
-     * @param array<string, string> $labels Docker labels as key-value pairs
+     * @param  array<string, string>  $labels  Docker labels as key-value pairs
      */
     public function __construct(
         public readonly string $id,
@@ -21,7 +22,7 @@ class Container
      */
     public function getFormattedMemory(): string
     {
-        return round($this->memoryUsageBytes / 1024 / 1024, 2) . ' MB';
+        return round($this->memoryUsageBytes / 1024 / 1024, 2).' MB';
     }
 
     /**

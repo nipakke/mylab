@@ -84,9 +84,9 @@ src/
 ├── Job/                        # Background jobs
 │   └── CollectContainers.php
 ├── Service/                    # Service layer
+│   ├── ContainerStore.php
 │   ├── DockerServiceInterface.php
-│   ├── DockerService.php
-│   └── ContainerSnapshotStore.php
+│   └── DockerService.php
 └── views/                      # Twig templates
     ├── layout.twig
     ├── home.twig

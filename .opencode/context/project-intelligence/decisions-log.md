@@ -98,7 +98,7 @@ A monorepo makes sense for multiple applications sharing code. Dash is a single 
 
 ---
 
-## Decision: In-memory container snapshot store with periodic collection
+## Decision: In-memory container store with periodic collection (simplified)
 
 **Date**: 2026-06-19
 **Status**: Decided
@@ -108,22 +108,22 @@ A monorepo makes sense for multiple applications sharing code. Dash is a single 
 The home page needs to display container data. Fetching from Docker API on every request would be slow and could overload the Docker daemon. The data is ephemeral by nature.
 
 ### Decision
-Use a background job (CollectContainers) that polls Docker API every 10 seconds and stores results in an in-memory circular buffer (ContainerSnapshotStore, 60 snapshots = 10 minutes of history). Handlers read from the store instead of hitting Docker directly.
+Use a background job (CollectContainers) that polls Docker API every 10 seconds and stores results in an in-memory store (ContainerStore, latest list only). Handlers read from the store instead of hitting Docker directly. On manual refresh, a fresh Docker API call updates the store before rendering.
 
 ### Rationale
-Decouples read path from Docker API calls. Provides instant response times for page loads. Circular buffer prevents memory leaks. No persistence needed — container state is inherently ephemeral.
+Decouples read path from Docker API calls for normal page loads. Provides instant response times. Manual refresh always returns the absolute latest data by fetching fresh from Docker and updating the store. No snapshot history — just the latest state.
 
 ### Alternatives Considered
 | Alternative | Pros | Cons | Why Rejected? |
 |-------------|------|------|---------------|
 | Direct Docker API on each request | Always fresh data | Slow, thundering herd on refresh | Unacceptable latency |
 | Redis/memcached cache | Shared across processes, TTL | External dependency, overkill for single-process | Added complexity, no benefit |
-| SQLite | Persistent, queryable | Overkill for ephemeral data, write amplification | Not needed |
+| Snapshot history buffer (60 entries) | Time-series data for trends | No consumer existed, added complexity | Removed — just latest state needed |
 
 ### Impact
-- **Positive**: Fast reads, decoupled from Docker API, memory-efficient circular buffer
-- **Negative**: Up to 10s staleness (acceptable for a dashboard)
-- **Risk**: Memory growth if snapshot size increases — mitigated by circular buffer cap
+- **Positive**: Fast reads, decoupled from Docker API, simple single-value store
+- **Negative**: Up to 10s staleness on home page (acceptable for a dashboard; manual refresh is always fresh)
+- **Risk**: None — single array in memory, negligible footprint
 
 ---
 
@@ -136,6 +136,7 @@ Decisions that were later overturned:
 | Go backend | 2026-04 | PHP + ReactPHP | Slower iteration, less mature Docker client |
 | Nx monorepo | 2026-06 | Flat PHP project | Orchestration overhead for single app |
 | SvelteKit frontend | 2026-06 | HTMX + SSE | Eliminated dual-language complexity |
+| Snapshot history (ContainerSnapshotStore) | 2026-06 | Simple ContainerStore (latest only) | No consumer existed for history; just latest state needed |
 
 ## Onboarding Checklist
 

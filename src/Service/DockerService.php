@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Shipped\Backend\Service;
@@ -8,8 +9,6 @@ use React\Promise\PromiseInterface;
 use Shipped\Backend\Domain\Container;
 use Shipped\Backend\Domain\TelemetrySnapshot;
 
-use function React\Promise\resolve;
-
 final class DockerService implements DockerServiceInterface
 {
     public function __construct(
@@ -18,15 +17,16 @@ final class DockerService implements DockerServiceInterface
 
     public function listAll(): PromiseInterface
     {
-        $client = $this->client ?? new Client();
+        $client = $this->client ?? new Client;
 
         return $client->containerList(true, true)->then(
-            fn(array $rawContainers): array => array_map(
+            fn (array $rawContainers): array => array_map(
                 $this->hydrateContainer(...),
                 $rawContainers,
             ),
             function (\Throwable $error): array {
                 fwrite(STDERR, "[DockerService] listAll failed: {$error->getMessage()}\n");
+
                 return [];
             },
         );
@@ -41,7 +41,7 @@ final class DockerService implements DockerServiceInterface
 
         return new TelemetrySnapshot(
             time: date('H:i:s'),
-            cpu: $cpuPercent . '%',
+            cpu: $cpuPercent.'%',
             memory: $this->getMemoryUsagePercent(),
         );
     }
@@ -49,7 +49,7 @@ final class DockerService implements DockerServiceInterface
     /**
      * Map a raw Docker API container array to a Container domain object.
      *
-     * @param array<string, mixed> $raw
+     * @param  array<string, mixed>  $raw
      */
     private function hydrateContainer(array $raw): Container
     {
@@ -71,7 +71,7 @@ final class DockerService implements DockerServiceInterface
 
     private function getMemoryUsagePercent(): string
     {
-        if (!is_readable('/proc/meminfo')) {
+        if (! is_readable('/proc/meminfo')) {
             return 'N/A';
         }
 
@@ -83,13 +83,13 @@ final class DockerService implements DockerServiceInterface
         preg_match('/MemTotal:\s+(\d+)/', $meminfo, $total);
         preg_match('/MemAvailable:\s+(\d+)/', $meminfo, $available);
 
-        if (!$total || !$available) {
+        if (! $total || ! $available) {
             return 'N/A';
         }
 
-        $used = (int)$total[1] - (int)$available[1];
-        $percent = round(($used / (int)$total[1]) * 100, 1);
+        $used = (int) $total[1] - (int) $available[1];
+        $percent = round(($used / (int) $total[1]) * 100, 1);
 
-        return $percent . '%';
+        return $percent.'%';
     }
 }

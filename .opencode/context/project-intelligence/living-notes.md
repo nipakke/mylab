@@ -1,8 +1,8 @@
-<!-- Context: project-intelligence/notes | Priority: high | Version: 1.0 | Updated: 2025-01-12 -->
+<!-- Context: project-intelligence/notes | Priority: high | Version: 1.0 | Updated: 2026-06-19 -->
 
-# Living Notes
+# Living Notes — Dash
 
-> Active issues, technical debt, open questions, and insights that don't fit elsewhere. Keep this alive.
+> Active issues, technical debt, open questions, and insights. Keep this alive.
 
 ## Quick Reference
 
@@ -14,101 +14,101 @@
 
 | Item | Impact | Priority | Mitigation |
 |------|--------|----------|------------|
-| [Debt item] | [What risk it creates] | [High/Med/Low] | [How to manage] |
+| No error handling for Docker socket unavailable | Dashboard shows empty/error state | Medium | Add graceful fallback UI + retry logic |
+| Twig CDN in dev mode (Tailwind/daisyUI) | No offline dev, version pinning | Low | Acceptable — prod uses compiled CSS |
+| No authentication | Anyone with network access can see containers | Medium | Add basic auth or Tailscale requirement |
+| Makefile lint only checks server.php | Rest of src/ not syntax-checked | Low | Replace with `./vendor/bin/pint --test` |
+| Stale `.vscode/settings.json` | Configured for Go, not PHP | Low | **Removed 2026-06-19** |
 
 ### Technical Debt Details
 
-**[Debt Item]**  
-*Priority*: [High/Med/Low]  
-*Impact*: [What happens if not addressed]  
-*Root Cause*: [Why this debt exists]  
-*Proposed Solution*: [How to fix it]  
-*Effort*: [Small/Medium/Large]  
-*Status*: [Acknowledged | Scheduled | In Progress | Deferred]
+**No error handling for Docker socket unavailable**
+- *Priority*: Medium
+- *Impact*: If Docker daemon is stopped or socket permissions wrong, dashboard shows broken state
+- *Root Cause*: Early-stage project — error handling not yet prioritized
+- *Proposed Solution*: Catch DockerService exceptions, render error partial with troubleshooting tips
+- *Effort*: Small
+- *Status*: Acknowledged
 
 ## Open Questions
 
-| Question | Stakeholders | Status | Next Action |
-|----------|--------------|--------|-------------|
-| [Question] | [Who needs to decide] | [Open/In Progress] | [What needs to happen] |
-
-### Open Question Details
-
-**[Question]**  
-*Context*: [Why this question matters]  
-*Stakeholders*: [Who needs to be involved]  
-*Options*: [What are the possibilities]  
-*Timeline*: [When does this need resolution]  
-*Status*: [Open/In Progress/Blocked]
+| Question | Status | Next Action |
+|----------|--------|-------------|
+| Should we add container log streaming? | Open | Evaluate SSE vs chunked transfer for log tailing |
+| Should we add container start/stop/restart actions? | Open | Add action buttons with HTMX POST + confirmation |
+| Should we switch to FrankenPHP worker mode for production? | Open | Already in Dockerfile — needs validation |
 
 ## Known Issues
 
 | Issue | Severity | Workaround | Status |
 |-------|----------|------------|--------|
-| [Issue] | [Critical/High/Med/Low] | [Temporary fix] | [Known/In Progress/Fixed] |
-
-### Issue Details
-
-**[Issue Title]**  
-*Severity*: [Critical/High/Med/Low]  
-*Impact*: [Who/what is affected]  
-*Reproduction*: [Steps to reproduce if applicable]  
-*Workaround*: [Temporary solution if exists]  
-*Root Cause*: [If known]  
-*Fix Plan*: [How to properly fix]  
-*Status*: [Known/In Progress/Fixed in vX.X]
+| None reported | — | — | — |
 
 ## Insights & Lessons Learned
 
 ### What Works Well
-- [Positive pattern 1] - [Why it works]
-- [Positive pattern 2] - [Why it works]
+- **HTMX partials for table refresh** — Zero JavaScript, clean separation. The `/containers/refresh` endpoint returns exactly the rows needed, and HTMX swaps them in.
+- **SSE for telemetry** — ReactPHP's `ThroughStream` makes SSE trivial. The `StreamTelemetry` action is under 30 lines.
+- **Immutable DTOs** — `Container` and `TelemetrySnapshot` as readonly classes prevent accidental mutation in async context.
+- **Handler → Action → Service layering** — Thin handlers, focused actions, swappable services. Easy to test each layer independently.
 
 ### What Could Be Better
-- [Area for improvement 1] - [Why it's a problem]
-- [Area for improvement 2] - [Why it's a problem]
+- **Error handling** — No try/catch around Docker API calls. A Docker daemon restart breaks the dashboard silently.
+- **Testing coverage** — Only 3 tests in `RenderTest.php`. No tests for Action or Service layers.
+- **Configuration** — Docker socket path is hardcoded. Should be configurable via env var.
 
-### Lessons Learned
-- [Lesson 1] - [Context and implication]
-- [Lesson 2] - [Context and implication]
-
-## Patterns & Conventions
+### Patterns & Conventions
 
 ### Code Patterns Worth Preserving
-- [Pattern 1] - [Where it lives, why it's good]
-- [Pattern 2] - [Where it lives, why it's good]
+- **Action as use-case** — Each Action class does one thing (ListContainers, RefreshContainers, StreamTelemetry). Returns a ReactPHP Promise for async operations.
+- **Handler as thin adapter** — Handlers only parse the request, delegate to Action, and format the Response. No business logic in handlers.
+- **Immutable DTOs with readonly properties** — PHP 8.2 readonly classes prevent accidental mutation.
+- **Twig layout inheritance** — `layout.twig` defines base HTML shell; `home.twig` extends it; `container-rows.twig` is a reusable partial.
 
 ### Gotchas for Maintainers
-- [Gotcha 1] - [What to watch out for]
-- [Gotcha 2] - [What to watch out for]
+- **ReactPHP is event-loop based** — Blocking I/O (file_get_contents, PDO) will stall the entire server. Always use async I/O.
+- **Twig templates are recompiled in dev** — Set `APP_ENV=prod` to use cached templates. Cache directory is `cache/twig/`.
+- **ContainerSnapshotStore is in-memory only** — Restarting the server loses history. This is by design.
+- **SSE connection stays open** — Each client holds a connection. ReactPHP handles this efficiently but it's worth monitoring.
 
-## Active Projects
+## Active Work
 
-| Project | Goal | Owner | Timeline |
-|---------|------|-------|----------|
-| [Project] | [What we're doing] | [Who owns it] | [When it matters] |
+| Area | Goal | Status |
+|------|------|--------|
+| Core dashboard | Container listing + telemetry | Done |
+| Background collection | Periodic Docker polling every 10s | Done |
+| Error handling | Graceful failure states | Pending |
+| Container actions | Start/stop/restart via HTMX | Planned |
+| Testing | Expand test coverage to Action/Service layers | Planned |
 
 ## Archive (Resolved Items)
 
-Moved here for historical reference. Current team should refer to current notes above.
+### Resolved: Go → PHP migration
+- **Resolved**: 2026-06-19
+- **Resolution**: Fully migrated to PHP 8.2 + ReactPHP
+- **Learnings**: PHP with ReactPHP is a viable async runtime. The clue/docker-react library is production-quality.
 
-### Resolved: [Item]
-- **Resolved**: [Date]
-- **Resolution**: [What was decided/done]
-- **Learnings**: [What we learned from this]
+### Resolved: Monorepo → flat project
+- **Resolved**: 2026-06-19
+- **Resolution**: Flattened from Nx monorepo to single PHP project
+- **Learnings**: Monorepo overhead isn't justified for single-application projects. HTMX eliminates the need for a separate frontend.
+
+### Resolved: Project cruft cleanup
+- **Resolved**: 2026-06-19
+- **Resolution**: Removed Go binary, Go VS Code config, stale .tmp sessions (sveltekit, turborepo, laravel-inertia), PHPUnit cache. Updated README and all project-intelligence context files.
+- **Learnings**: Project evolved through 4 architectures — regular cleanup prevents confusion.
 
 ## Onboarding Checklist
 
-- [ ] Review known technical debt and understand impact
-- [ ] Know what open questions exist and who's involved
-- [ ] Understand current issues and workarounds
-- [ ] Be aware of patterns and gotchas
-- [ ] Know active projects and timelines
-- [ ] Understand the team's priorities
+- [x] Review known technical debt and understand impact
+- [x] Know what open questions exist
+- [x] Understand current issues and workarounds
+- [x] Be aware of patterns and gotchas
+- [x] Know active projects and timelines
 
 ## Related Files
 
-- `decisions-log.md` - Past decisions that inform current state
-- `business-domain.md` - Business context for current priorities
-- `technical-domain.md` - Technical context for current state
-- `business-tech-bridge.md` - Context for current trade-offs
+- `decisions-log.md` — Past decisions that inform current state
+- `business-domain.md` — Business context for current priorities
+- `technical-domain.md` — Technical context for current state
+- `business-tech-bridge.md` — Context for current trade-offs

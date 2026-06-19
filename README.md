@@ -1,65 +1,95 @@
-Here is a clean, comprehensive **Developer Workflow** section optimized for your project's `README.md`. It clearly explains how to spin up the environment, sync types, and run tests.
+# Dash — Docker Container Dashboard
 
----
+An asynchronous PHP hypermedia monolith for real-time Docker container monitoring. Built with ReactPHP, Twig, HTMX, and SSE — no client-side JavaScript framework required.
 
-## 🛠️ Developer Workflow
+## Architecture
 
-This monorepo uses **Nx** to orchestrate tasks across both the Svelte frontend and the asynchronous PHP backend. You do not need to manage multiple terminal processes manually.
+```
+Browser (HTMX + SSE)
+       │
+       ▼
+FrankenPHP / Caddy (port 8000)
+  ├── /assets/* → static files
+  └── /* → ReactPHP worker (127.0.0.1:8080)
+              │
+              ├── FastRoute dispatcher
+              ├── Handler → Action → DockerService (clue/docker-react)
+              └── Twig templates (server-rendered HTML)
+```
 
-### 1. Prerequisites & Installation
+The frontend uses **HTMX** for partial page updates and **Server-Sent Events** for real-time telemetry streaming. All rendering happens server-side via Twig — no build step, no SPA.
 
-Ensure you have Node.js, PHP 8.2+, and Composer installed locally.
+## Prerequisites
 
-First, install dependencies for both ecosystems from the repository root:
+- PHP 8.2+
+- Composer
+- Node.js (for `nodemon` in development)
+- Docker Engine (with API accessible)
+
+## Quick Start
 
 ```bash
-# Install frontend Javascript dependencies
+# Install all dependencies
 npm install
 
-# Install backend PHP dependencies
-cd apps/backend && composer install
-
+# Start the dev server (auto-reloads on changes)
+npm run dev
 ```
 
-### 2. Local Development
+Visit `http://localhost:8000`.
 
-To spin up the entire application concurrently (Vite asset compilation, the ReactPHP background worker, and the FrankenPHP web server proxy), run the following command from the workspace root:
+## Development Commands
+
+| Task | Command | Description |
+|------|---------|-------------|
+| Start dev server | `npm run dev` | Nodemon watches `src/` for `.php/.twig` changes |
+| Run server directly | `make run` | Starts ReactPHP without auto-reload |
+| Run tests | `make test` | Runs Pest test suite |
+| Lint | `make lint` | PHP syntax check |
+| Clean cache | `make clean` | Removes Twig template cache |
+
+## Production Build
 
 ```bash
-nx run backend:dev
-
+make build
 ```
 
-Once running, you can access your application at `http://localhost:8000`.
+Runs `composer install --no-dev --optimize-autoloader`. For containerized deployment, use the provided `Dockerfile` which builds a FrankenPHP/Caddy image with compiled Tailwind CSS.
 
-### 3. Synchronizing Types (PHP ➡️ TypeScript)
+## Routes
 
-Data models are authored as strictly-typed PHP classes within our local libraries. To automatically generate and sync their matching TypeScript interfaces for the Svelte frontend, execute:
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/` | Dashboard homepage — lists all containers |
+| POST | `/containers/refresh` | HTMX partial — refreshes container table |
+| GET | `/api/telemetry` | SSE stream — system CPU/memory telemetry |
 
-```bash
-nx run backend:generate-types
-
-```
-
-*This updates the generated definitions file located at `apps/frontend/src/types/generated.d.ts`.*
-
-### 4. Running Tests
-
-Automated testing is powered by **Pest**. You can execute tests for specific backend modules directly from the workspace root:
-
-```bash
-# Run tests for the isolated docker library package
-nx test docker-core
+## Project Structure
 
 ```
-
----
-
-### Workflow Summary Reference
-
-| Operational Task | Command | Scope |
-| --- | --- | --- |
-| **Dependency Injection** | `npm install && cd apps/backend && composer install` | Full Workspace Initialization |
-| **Boot Application Stack** | `nx run backend:dev` | Vite + ReactPHP Worker + FrankenPHP |
-| **Generate Type Contracts** | `nx run backend:generate-types` | Syncs PHP DTOs to Svelte `generated.d.ts` |
-| **Execute Test Suites** | `nx test docker-core` | Runs Pest assertions on the core logic |
+src/
+├── server.php                  # Entry point
+├── ServerKernel.php            # DI, routing, HTTP server setup
+├── Action/                     # Business logic (use cases)
+│   ├── ListContainers.php
+│   ├── RefreshContainers.php
+│   └── StreamTelemetry.php
+├── Domain/                     # Immutable DTOs
+│   ├── Container.php
+│   └── TelemetrySnapshot.php
+├── Handler/                    # HTTP adapters
+│   ├── HomeHandler.php
+│   ├── ContainerRefreshHandler.php
+│   └── TelemetryStreamHandler.php
+├── Job/                        # Background jobs
+│   └── CollectContainers.php
+├── Service/                    # Service layer
+│   ├── DockerServiceInterface.php
+│   ├── DockerService.php
+│   └── ContainerSnapshotStore.php
+└── views/                      # Twig templates
+    ├── layout.twig
+    ├── home.twig
+    └── partials/
+        └── container-rows.twig
+```

@@ -1,94 +1,109 @@
-<!-- Context: project-intelligence/bridge | Priority: high | Version: 1.0 | Updated: 2025-01-12 -->
+<!-- Context: project-intelligence/bridge | Priority: high | Version: 1.0 | Updated: 2026-06-19 -->
 
-# Business ↔ Tech Bridge
+# Business ↔ Tech Bridge — Dash
 
-> Document how business needs translate to technical solutions. This is the critical connection point.
+> How business needs translate to technical solutions. This is the critical connection point.
 
 ## Quick Reference
 
-- **Purpose**: Show stakeholders technical choices serve business goals
-- **Purpose**: Show developers business constraints drive architecture
+- **Purpose**: Show how technical choices serve the goal of simple Docker monitoring
 - **Update When**: New features, refactoring, business pivot
 
 ## Core Mapping
 
 | Business Need | Technical Solution | Why This Mapping | Business Value |
 |---------------|-------------------|------------------|----------------|
-| [Users need X] | [Technical implementation] | [Why this maps] | [Value delivered] |
-| [Business wants Y] | [Technical implementation] | [Why this maps] | [Value delivered] |
-| [Compliance requires Z] | [Technical implementation] | [Why this maps] | [Value delivered] |
+| See all Docker containers at a glance | Docker API → Container DTOs → Twig table | Direct socket connection, no agents needed | No setup, instant visibility |
+| Real-time system resource monitoring | SSE stream from /api/telemetry | ReactPHP ThroughStream, 2s interval | Live CPU/memory without page refresh |
+| Auto-refreshing container list | HTMX POST /containers/refresh | Returns partial HTML, HTMX swaps DOM | Always current without manual refresh |
+| Simple deployment | Single Dockerfile (FrankenPHP + Caddy) | Multi-stage build, compiled Tailwind | One container to run |
+| Zero-config setup | Docker socket access only | Unix socket connection via clue/docker-react | No API keys, no agent, no registration |
 
-## Feature Mapping Examples
+## Feature Mapping
 
-### Feature: [Feature Name]
-
-**Business Context**:
-- User need: [What users need]
-- Business goal: [Why this matters to business]
-- Priority: [Why this was prioritized]
-
-**Technical Implementation**:
-- Solution: [What was built]
-- Architecture: [How it fits the system]
-- Trade-offs: [What was considered and why it won]
-
-**Connection**:
-[Explain clearly how the technical solution serves the business need. What would happen without this feature? What does this feature enable for the business?]
-
-### Feature: [Feature Name]
+### Feature: Container Dashboard (Home Page)
 
 **Business Context**:
-- User need: [What users need]
-- Business goal: [Why this matters to business]
-- Priority: [Why this was prioritized]
+- User need: See all Docker containers with status, memory usage, and labels
+- Business goal: Replace `docker ps` terminal command with a visual dashboard
+- Priority: Core feature — the entire reason the project exists
 
 **Technical Implementation**:
-- Solution: [What was built]
-- Architecture: [How it fits the system]
-- Trade-offs: [What was considered and why it won]
+- Solution: GET `/` → HomeHandler → ListContainers → DockerService::listAll() → Twig renders home.twig
+- Architecture: Handler (thin adapter) → Action (use-case) → Service (Docker API)
+- Trade-offs: Server-rendered HTML (not SPA) — simpler but less interactive; acceptable for a dashboard
 
 **Connection**:
-[Explain clearly how the technical solution serves the business need.]
+Without this feature, the project has no purpose. The technical choice of server-rendered Twig templates means every page load gets fresh container data without client-side state management. HTMX handles partial refreshes — the user clicks "Refresh" and gets new rows without a full page reload.
+
+### Feature: Real-Time Telemetry
+
+**Business Context**:
+- User need: Monitor host system CPU and memory usage in real time
+- Business goal: Provide system health context alongside container status
+- Priority: High — differentiates from basic `docker ps` output
+
+**Technical Implementation**:
+- Solution: GET `/api/telemetry` → TelemetryStreamHandler → StreamTelemetry → SSE stream (2s interval)
+- Architecture: ReactPHP ThroughStream reads /proc/stat and /proc/meminfo, emits JSON every 2 seconds
+- Trade-offs: SSE (unidirectional) vs WebSocket (bidirectional) — SSE is simpler and sufficient for telemetry
+
+**Connection**:
+SSE provides a persistent, low-overhead stream from server to browser. The browser's native EventSource API consumes it without any JavaScript library. Each 2-second snapshot includes CPU percentage and memory usage — enough granularity for monitoring without overwhelming the connection.
+
+### Feature: Periodic Container Collection
+
+**Business Context**:
+- User need: Fast page loads without waiting for Docker API on every request
+- Business goal: Responsive dashboard even with many containers
+- Priority: Medium — performance optimization
+
+**Technical Implementation**:
+- Solution: Background CollectContainers job runs every 10s → stores in ContainerSnapshotStore (circular buffer, 60 snapshots)
+- Architecture: ReactPHP periodic timer → DockerService::listAll() → in-memory store → Handlers read from store
+- Trade-offs: Up to 10s staleness vs instant Docker API calls — acceptable for monitoring dashboard
+
+**Connection**:
+Decoupling the read path from the Docker API means the home page loads instantly from memory. The 10s collection interval keeps data reasonably fresh without hammering the Docker daemon. The circular buffer prevents memory leaks (max 60 snapshots = 10 minutes of history).
 
 ## Trade-off Decisions
 
-When business and technical needs conflict, document the trade-off:
-
 | Situation | Business Priority | Technical Priority | Decision Made | Rationale |
 |-----------|-------------------|-------------------|---------------|-----------|
-| [Conflict] | [What business wants] | [What tech wants] | [What was chosen] | [Why this was right] |
+| Frontend framework | Simple, fast to build | Maintainable, scalable | No framework (HTMX + SSE) | Dashboard is simple enough; SPA complexity not justified |
+| Real-time updates | Live telemetry visible | Efficient server resources | SSE (not WebSocket) | Unidirectional data flow; SSE is simpler and sufficient |
+| Data freshness | Near real-time container status | Don't overload Docker daemon | 10s polling + in-memory cache | Good balance of freshness and performance |
+| Language choice | Fast iteration, easy maintenance | Async I/O for Docker/SSE | PHP + ReactPHP | PHP's iteration speed + ReactPHP's async event loop |
 
 ## Common Misalignments
 
 | Misalignment | Warning Signs | Resolution Approach |
 |--------------|---------------|---------------------|
-| [Type of mismatch] | [Symptoms to watch for] | [How to address] |
+| Adding SPA complexity | Someone proposes "let's add React for better UI" | Evaluate: does the feature actually need client-side state? HTMX + SSE already covers dynamic updates. |
+| Over-engineering infrastructure | Proposing Redis, message queues, microservices | Ask: is this a single-user dashboard or a multi-tenant SaaS? Keep it simple. |
+| Premature optimization | Optimizing for thousands of containers | Current target is solo devs with <100 containers. Profile before optimizing. |
 
 ## Stakeholder Communication
 
-This file helps translate between worlds:
+**For the Developer**:
+- Every technical choice serves the goal of simplicity — zero-config, single binary, no JavaScript framework
+- The hypermedia architecture (HTMX + SSE) is a deliberate pattern, not a limitation
 
-**For Business Stakeholders**:
-- Shows that technical investments serve business goals
-- Provides context for why certain choices were made
-- Demonstrates ROI of technical decisions
-
-**For Technical Stakeholders**:
-- Provides business context for architectural decisions
-- Shows the "why" behind constraints and requirements
-- Helps prioritize technical debt with business impact
+**For Potential Contributors**:
+- Read `decisions-log.md` to understand why things are the way they are
+- The `Handler → Action → Service` layering is consistent across all features
+- New features should follow the same pattern
 
 ## Onboarding Checklist
 
-- [ ] Understand the core business needs this project addresses
-- [ ] See how each major feature maps to business value
-- [ ] Know the key trade-offs and why decisions were made
-- [ ] Be able to explain to stakeholders why technical choices matter
-- [ ] Be able to explain to developers why business constraints exist
+- [x] Understand the core business needs this project addresses
+- [x] See how each major feature maps to business value
+- [x] Know the key trade-offs and why decisions were made
+- [x] Be able to explain why the hypermedia architecture was chosen
 
 ## Related Files
 
-- `business-domain.md` - Business needs in detail
-- `technical-domain.md` - Technical implementation in detail
-- `decisions-log.md` - Decisions made with full context
-- `living-notes.md` - Current open questions and issues
+- `business-domain.md` — Business needs in detail
+- `technical-domain.md` — Technical implementation in detail
+- `decisions-log.md` — Decisions made with full context
+- `living-notes.md` — Current open questions and issues

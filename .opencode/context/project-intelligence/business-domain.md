@@ -1,8 +1,8 @@
-<!-- Context: project-intelligence/business | Priority: high | Version: 1.0 | Updated: 2025-01-12 -->
+<!-- Context: project-intelligence/business | Priority: high | Version: 1.0 | Updated: 2026-06-19 -->
 
-# Business Domain
+# Business Domain — Dash
 
-> Document the business context, problems solved, and value created.
+> Dash is a real-time Docker container dashboard that lets developers monitor their containers at a glance — no CLI needed.
 
 ## Quick Reference
 
@@ -12,77 +12,69 @@
 
 ## Project Identity
 
-```
-Project Name: [Name]
-Tagline: [One-line description]
-Problem Statement: [What problem are we solving?]
-Solution: [How we're solving it]
-```
+- **Project Name**: Dash
+- **Tagline**: Real-time Docker container monitoring, zero JavaScript required
+- **Problem Statement**: Developers running Docker containers need a quick visual overview of container status, resource usage, and health — without switching to the terminal or setting up complex monitoring stacks.
+- **Solution**: A lightweight, self-hosted web dashboard that connects to the Docker socket, displays live container data via HTMX partials, and streams system telemetry via SSE. Runs in a single binary with no external dependencies.
 
 ## Target Users
 
 | User Segment | Who They Are | What They Need | Pain Points |
 |--------------|--------------|----------------|-------------|
-| [Primary] | [Description] | [Their needs] | [Their frustrations] |
-| [Secondary] | [Description] | [Their needs] | [Their frustrations] |
+| Primary: Solo developers | Running Docker on their dev machine | Quick visual check of all containers | Switching to terminal, remembering docker ps flags |
+| Secondary: Small teams | Running shared dev/staging environments | Shared visibility into container health | Complex monitoring tools (Grafana, Prometheus) are overkill |
+| Tertiary: Homelab operators | Self-hosting services on a home server | Lightweight dashboard for personal infra | Want something simpler than Portainer |
 
 ## Value Proposition
 
-**For Users**:
-- [Key benefit 1]
-- [Key benefit 2]
-- [Key benefit 3]
+**For Developers**:
+- One-page view of all Docker containers with status, memory, and labels
+- Real-time system telemetry (CPU, memory) — no refresh needed
+- Auto-refreshes container list via HTMX partials
+- Zero configuration — just point it at the Docker socket
 
-**For Business**:
-- [Key value 1]
-- [Key value 2]
+**For the Project**:
+- Demonstrates the hypermedia architecture pattern (HTMX + SSE + server-rendered HTML)
+- Serves as a reference implementation for ReactPHP + Twig + Docker API
+- Lightweight enough to run alongside development containers
 
 ## Success Metrics
 
 | Metric | Definition | Target | Current |
 |--------|------------|--------|---------|
-| [Metric 1] | [What it measures] | [Goal] | [Actual] |
-| [Metric 2] | [What it measures] | [Goal] | [Actual] |
-
-## Business Model (if applicable)
-
-```
-Revenue Model: [How the business makes money]
-Pricing Strategy: [If applicable]
-Unit Economics: [CAC, LTV, etc.]
-Market Position: [Where we fit in the market]
-```
+| Works with Docker | Lists all running containers correctly | 100% | Works |
+| Real-time updates | Container refresh and telemetry streaming | <2s latency | 2s interval |
+| Single binary deploy | Runs via Docker with no external services | Yes | Dockerfile exists |
+| Zero JS framework | No React/Vue/Svelte on the frontend | Yes | HTMX + SSE only |
 
 ## Key Stakeholders
 
-| Role | Name | Responsibility | Contact |
-|------|------|----------------|---------|
-| [Product Owner] | [Name] | [What they own] | [Contact] |
-| [Tech Lead] | [Name] | [What they own] | [Contact] |
-| [Business Lead] | [Name] | [What they own] | [Contact] |
+| Role | Responsibility |
+|------|----------------|
+| Developer | Full-stack ownership — PHP backend, Twig templates, Docker integration |
+| AI Agents (OAC) | Assisted development via .opencode/ context system |
 
 ## Roadmap Context
 
-**Current Focus**: [What we're working on now]
-**Next Milestone**: [Upcoming goal]
-**Long-term Vision**: [Where this is heading]
+**Current Focus**: Stable container listing + telemetry streaming
+**Next Milestone**: Container log viewing, start/stop/restart actions
+**Long-term Vision**: Full Docker management dashboard — images, volumes, networks, compose stacks
 
 ## Business Constraints
 
-- [Constraint 1] - [Why it exists]
-- [Constraint 2] - [Why it exists]
+- Must run with minimal resources (alongside dev containers) — hence the async event-loop architecture
+- Must work with Docker socket access (no agent, no remote daemon required)
 
 ## Onboarding Checklist
 
-- [ ] Understand the problem statement
-- [ ] Identify target users and their needs
-- [ ] Know the key value proposition
-- [ ] Understand success metrics
-- [ ] Know who the stakeholders are
-- [ ] Understand current business constraints
+- [x] Understand the problem statement
+- [x] Identify target users and their needs
+- [x] Know the key value proposition
+- [x] Understand success metrics
+- [x] Know who the stakeholders are
 
 ## Related Files
 
-- `technical-domain.md` - How this business need is solved technically
-- `business-tech-bridge.md` - Mapping between business and technical
-- `decisions-log.md` - Business decisions with context
+- `technical-domain.md` — How this business need is solved technically
+- `business-tech-bridge.md` — Mapping between business and technical
+- `decisions-log.md` — Business decisions with context

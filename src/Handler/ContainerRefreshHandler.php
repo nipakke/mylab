@@ -7,25 +7,25 @@ namespace Shipped\Backend\Handler;
 use Psr\Http\Message\ServerRequestInterface;
 use React\Http\Message\Response;
 use React\Promise\PromiseInterface;
-use Shipped\Backend\Workflow\RefreshContainersWorkflow;
+use Shipped\Backend\Action\RefreshContainers;
 
 /**
  * HTTP handler for the POST /containers/refresh route (HTMX partial reload).
  *
  * Thin adapter: accepts the incoming request, delegates all business
- * logic to RefreshContainersWorkflow, and wraps the rendered HTML
+ * logic to RefreshContainers, and wraps the rendered HTML
  * fragment in a PSR-7 Response with the appropriate Content-Type header.
  */
 final class ContainerRefreshHandler
 {
     public function __construct(
-        private readonly RefreshContainersWorkflow $workflow,
+        private readonly RefreshContainers $action,
     ) {}
 
     /**
      * Handle an incoming HTTP request for container refresh.
      *
-     * Delegates to RefreshContainersWorkflow::execute() which re-fetches
+     * Delegates to RefreshContainers::execute() which re-fetches
      * containers from Docker and renders the table-row partial via Twig.
      * The resulting HTML string is wrapped in a 200 Response with
      * Content-Type: text/html for HTMX consumption.
@@ -34,7 +34,7 @@ final class ContainerRefreshHandler
      */
     public function handle(ServerRequestInterface $request): PromiseInterface
     {
-        return $this->workflow->execute()->then(
+        return $this->action->execute()->then(
             fn(string $html): Response => new Response(
                 200,
                 ['Content-Type' => 'text/html'],

@@ -1,6 +1,6 @@
 {
   "watch": ["src"],
-  "ext": "php",
+  "ext": "php,twig",
   "exec": "php src/server.php",
   "env": {
     "APP_ENV": "local"

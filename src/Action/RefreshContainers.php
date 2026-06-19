@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Shipped\Backend\Workflow;
+namespace Shipped\Backend\Action;
 
 use React\Promise\PromiseInterface;
 use Shipped\Backend\Service\DockerServiceInterface;
@@ -17,7 +17,7 @@ use Twig\Environment;
  * fulfilment/rejection handlers or feed the result directly into a ReactPHP
  * response body.
  */
-final class RefreshContainersWorkflow
+final class RefreshContainers
 {
     public function __construct(
         private readonly DockerServiceInterface $docker,

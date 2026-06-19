@@ -56,11 +56,16 @@ final class DockerService implements DockerServiceInterface
         $name = $raw['Names'][0] ?? 'unknown';
         $name = ltrim($name, '/');
 
+        $labels = isset($raw['Labels']) && is_array($raw['Labels'])
+            ? $raw['Labels']
+            : [];
+
         return new Container(
             id: substr($raw['Id'], 0, 12),
             name: $name,
             status: $raw['State'] ?? 'unknown',
             memoryUsageBytes: $raw['SizeRw'] ?? 0,
+            labels: $labels,
         );
     }
 

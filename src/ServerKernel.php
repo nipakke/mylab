@@ -16,10 +16,10 @@ use Shipped\Backend\Handler\TelemetryStreamHandler;
 use Shipped\Backend\Service\ContainerSnapshotStore;
 use Shipped\Backend\Service\DockerService;
 use Shipped\Backend\Service\DockerServiceInterface;
-use Shipped\Backend\Workflow\CollectContainersWorkflow;
-use Shipped\Backend\Workflow\ListContainersWorkflow;
-use Shipped\Backend\Workflow\RefreshContainersWorkflow;
-use Shipped\Backend\Workflow\StreamTelemetryWorkflow;
+use Shipped\Backend\Action\ListContainers;
+use Shipped\Backend\Action\RefreshContainers;
+use Shipped\Backend\Action\StreamTelemetry;
+use Shipped\Backend\Job\CollectContainers;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
@@ -45,15 +45,15 @@ final class ServerKernel
     public function run(): void
     {
         $homeHandler = new HomeHandler(
-            new ListContainersWorkflow($this->dockerService, $this->twig),
+            new ListContainers($this->dockerService, $this->twig),
         );
 
         $refreshHandler = new ContainerRefreshHandler(
-            new RefreshContainersWorkflow($this->dockerService, $this->twig),
+            new RefreshContainers($this->dockerService, $this->twig),
         );
 
         $telemetryHandler = new TelemetryStreamHandler(
-            new StreamTelemetryWorkflow($this->dockerService),
+            new StreamTelemetry($this->dockerService),
         );
 
         $dispatcher = FastRoute\simpleDispatcher(
@@ -82,11 +82,11 @@ final class ServerKernel
         });
 
         $containerSnapshotStore = new ContainerSnapshotStore();
-        $collectWorkflow = new CollectContainersWorkflow(
+        $collectJob = new CollectContainers(
             $this->dockerService,
             $containerSnapshotStore,
         );
-        $collectWorkflow->start();
+        $collectJob->start();
 
         Loop::addPeriodicTimer(5.0, function (): void {
             echo '[' . date('H:i:s') . "] Async heartbeat — worker alive\n";

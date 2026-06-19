@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Shipped\Backend\Workflow;
+namespace Shipped\Backend\Job;
 
 use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
@@ -9,14 +9,12 @@ use Shipped\Backend\Service\ContainerSnapshotStore;
 use Shipped\Backend\Service\DockerServiceInterface;
 
 /**
- * Periodic container collection workflow.
+ * Periodic container collection job.
  *
  * Every 10 seconds, queries the Docker API for all containers and records
  * the results into the in-memory ContainerSnapshotStore.
- *
- * Follows the same ReactPHP periodic-timer pattern as StreamTelemetryWorkflow.
  */
-final class CollectContainersWorkflow
+final class CollectContainers
 {
     private const INTERVAL_SECONDS = 10.0;
 
@@ -41,7 +39,7 @@ final class CollectContainersWorkflow
                 function (\Throwable $error): void {
                     fwrite(
                         STDERR,
-                        "[CollectContainersWorkflow] Collection failed: {$error->getMessage()}\n",
+                        "[CollectContainers] Collection failed: {$error->getMessage()}\n",
                     );
                 },
             );

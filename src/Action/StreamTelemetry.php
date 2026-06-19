@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace Shipped\Backend\Workflow;
+namespace Shipped\Backend\Action;
 
 use React\EventLoop\Loop;
 use React\Stream\ThroughStream;
 use Shipped\Backend\Service\DockerServiceInterface;
 
-final class StreamTelemetryWorkflow
+final class StreamTelemetry
 {
     public function __construct(
         private readonly DockerServiceInterface $docker,

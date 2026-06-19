@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Shipped\Backend\Workflow;
+namespace Shipped\Backend\Action;
 
 use React\Promise\PromiseInterface;
 use Shipped\Backend\Service\DockerServiceInterface;
@@ -13,7 +13,7 @@ use Twig\Environment;
  * Pipeline: fetch containers from Docker → hydrate to DTOs → render via Twig.
  * Fully async — returns a PromiseInterface that integrates with the ReactPHP event loop.
  */
-final class ListContainersWorkflow
+final class ListContainers
 {
     public function __construct(
         private readonly DockerServiceInterface $docker,

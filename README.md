@@ -1,144 +1,219 @@
-# MyLab — Docker Container Dashboard
+# MyLab
 
-An asynchronous PHP hypermedia monolith for real-time Docker container monitoring. Built with ReactPHP, Twig, and HTMX — no client-side JavaScript framework required.
+A self-updating link page that reads Docker container labels and renders them as a clean dashboard. No database, no config files — add labels to your containers and MyLab picks them up.
 
-## Architecture
+> 🥤 100% vibe coded
 
-```
-Browser (HTMX + SSE)
-       │
-       ▼
-ReactPHP HTTP Server (port 8080)
-  ├── /assets/* → static files from public/
-  ├── /containers/stream → SSE push
-  ├── / → HomeHandler (Twig)
-  └── /* → 404
-       │
-       ├── FastRoute dispatcher
-       ├── Handler → Action → DockerService (clue/docker-react)
-       └── Twig templates (server-rendered HTML)
-```
+---
 
-The frontend uses **HTMX** for partial page updates. All rendering happens server-side via Twig — no build step, no SPA.
+## Install
 
-## Prerequisites
-
-- PHP 8.2+
-- Composer
-- Node.js (for `nodemon` in development)
-- Docker Engine (with API accessible)
-
-## Quick Start
+Pull the image from Docker Hub:
 
 ```bash
-# Install all dependencies
-npm install
-
-# Start the dev server (auto-reloads on changes)
-npm run dev
+docker pull username/mylab        # replace with the actual image name
 ```
 
-Visit `http://localhost:8080`.
-
-## Development Commands
-
-| Task | Command | Description |
-|------|---------|-------------|
-| Start dev server | `npm run dev` | Nodemon watches `src/` for `.php/.twig` changes |
-| Run server directly | `make run` | Starts ReactPHP without auto-reload |
-| Run tests | `make test` | Runs Pest test suite |
-| Lint | `make lint` | PHP syntax check |
-| Clean cache | `make clean` | Removes Twig template cache |
-
-## Production Build
+### Run with Docker
 
 ```bash
-make build
+docker run -d \
+  --name mylab \
+  -p 8080:80 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  username/mylab
 ```
 
-Runs `composer install --no-dev --optimize-autoloader`. For containerized deployment, use the provided `Dockerfile` which builds a PHP 8.3 CLI Alpine image with compiled Tailwind CSS.
+Visit **`http://localhost:8080`**.
 
-## Routes
+### Run with Docker Compose
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/` | Dashboard homepage — lists all containers |
-| GET | `/containers/stream` | SSE endpoint — push container updates to client |
-| GET | `/dev/reload` | (local only) Triggers nodemon reload |
+```yaml
+# compose.yml
+services:
+  mylab:
+    image: username/mylab
+    container_name: mylab
+    ports:
+      - "8080:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TRUST_PROXY=auto            # trust reverse proxy on same Docker network
+    restart: unless-stopped
+```
 
-## Configuration
+```bash
+docker compose up -d
+```
 
-All configuration is via environment variables (no `.env` file). See `.env.example` for the full list.
+### Use with a Docker socket proxy
 
-| Env Var | Default | Description |
-|---------|---------|-------------|
-| `APP_ENV` | — | `local` or `production`. `local` disables Twig cache and enables the `/dev/reload` endpoint. |
+Mounting the raw Docker socket gives full root access to the host. For better security, use a socket proxy like [`tecnativa/docker-socket-proxy`](https://github.com/Tecnativa/docker-socket-proxy) that exposes only the API endpoints MyLab needs.
+
+MyLab requires only two endpoints:
+- `GET /containers/json` — list running containers
+- `GET /events` — stream container start/stop events
+
+```yaml
+# compose.yml
+services:
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: socket-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - CONTAINERS=1
+      - EVENTS=1
+    restart: unless-stopped
+
+  mylab:
+    image: username/mylab
+    container_name: mylab
+    ports:
+      - "8080:80"
+    environment:
+      - DOCKER_HOST=tcp://socket-proxy:2375
+      - TRUST_PROXY=auto
+    restart: unless-stopped
+```
+
+---
+
+## Docker Container Labels
+
+MyLab shows any container that has at least one `mylab.*` label. Everything else is ignored.
+
+| Label | Required | Description |
+|---|---|---|
+| `mylab.name` | **Yes** | Display name of the service. |
+| `mylab.url` | No | Link URL. If unset, the card appears without a link. |
+| `mylab.icon` | No | Icon identifier (see below). |
+| `mylab.group` | No | Group name for card grouping. Defaults to `"Other"`. |
+| `mylab.description` | No | Short description shown on the card. |
+| `mylab.weight` | No | Sort weight within the group. Lower numbers sort first. Default `0`. |
+| `mylab.enable` | No | Set to `"false"` to hide the container from the dashboard. |
+
+### Example
+
+```yaml
+services:
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    labels:
+      mylab.name: "Grafana"
+      mylab.url: "https://grafana.example.com"
+      mylab.icon: "grafana"
+      mylab.group: "Monitoring"
+      mylab.description: "Metrics and dashboards"
+      mylab.weight: "10"
+```
+
+### Icons
+
+Pass the icon name as the value of `mylab.icon`. Common examples: `grafana`, `uptimekuma`, `plex`, `portainer`, `traefik`, `homeassistant`.
+
+---
+
+## Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `APP_ENV` | _(none)_ | `local` or `production`. The Docker image defaults to `production`. `local` disables Twig cache and enables `/dev/reload`. |
+| `PORT` | `80` (Docker image) | Port the HTTP server listens on. |
+| `DOCKER_HOST` | _(Docker default)_ | Docker daemon DSN (e.g. `unix:///var/run/docker.sock` or `tcp://host:2375`). |
+| `MYLAB_DOCKER_HOSTS` | _(none)_ | Comma-separated list of Docker daemon DSNs for **multi-host mode**. Takes priority over `DOCKER_HOST`. |
 | `RATE_LIMIT` | `60` | Max requests per window per IP (token bucket burst size). |
 | `RATE_LIMIT_WINDOW` | `60` | Window duration in seconds for rate limiting. |
-| `TRUST_PROXY` | `0` | Proxy trust mode — `0`, `1`, `auto`, `cloudflare`, or `traefik`. |
+| `TRUST_PROXY` | `0` | Proxy trust mode for client IP resolution (see below). |
 | `PROXY_IP_HEADER` | `X-Forwarded-For` | Header to read for the real client IP when proxy trust is enabled. |
 
-### Trust Proxy Modes
+### Multi-host mode
+
+Set `MYLAB_DOCKER_HOSTS` to a comma-separated list of Docker daemon endpoints to aggregate containers from multiple hosts on a single dashboard:
+
+```bash
+docker run -d \
+  --name mylab \
+  -p 80:80 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -e MYLAB_DOCKER_HOSTS="unix:///var/run/docker.sock,tcp://10.0.0.5:2375,tcp://10.0.0.6:2375" \
+  username/mylab
+```
+
+If exactly one DSN is provided, the single `DockerService` is used. Two or more switches to `MultiDockerService`.
+
+### Trust proxy modes
+
+Controls how the real client IP is determined behind a reverse proxy. Important for rate limiting accuracy.
 
 | Mode | Behaviour |
-|------|-----------|
-| `0` | Never trust proxies — always use `REMOTE_ADDR`. |
+|---|---|
+| `0` | Never trust proxies — always use `REMOTE_ADDR`. Default. |
 | `1` | Always trust — read real IP from `PROXY_IP_HEADER`. |
-| `auto` | Auto-detect: trusts proxy only when `REMOTE_ADDR` is a private IP (Docker/LAN) **or a known Cloudflare IP**. |
-| `cloudflare` | Validates `REMOTE_ADDR` is a **Cloudflare edge IP** before trusting `CF-Connecting-IP`. |
+| `auto` | Auto-detect: trusts proxy only when `REMOTE_ADDR` is a private IP (Docker/LAN) **or** a known Cloudflare IP. |
+| `cloudflare` | Validates `REMOTE_ADDR` against Cloudflare IP ranges before trusting `CF-Connecting-IP`. |
 | `traefik` | Trusts `X-Forwarded-For` only when `REMOTE_ADDR` is on a Docker/local network. |
 
-### Rate Limiting Behaviour
-
-Each IP gets a token bucket that refills steadily. Up to `RATE_LIMIT` requests are allowed in a burst, then the client is throttled to `RATE_LIMIT` / `RATE_LIMIT_WINDOW` requests per second. When rate-limited, the server returns **429 Too Many Requests** with a `Retry-After` header. Stale client buckets are pruned automatically.
-
-**Recommended settings**:
+### Recommended settings
 
 ```bash
 # Behind Traefik or nginx on the same Docker network
-RATE_LIMIT=60 TRUST_PROXY=auto make run
+docker run ... -e TRUST_PROXY=auto username/mylab
 
 # Behind Cloudflare
-RATE_LIMIT=120 TRUST_PROXY=cloudflare make run
+docker run ... -e TRUST_PROXY=cloudflare username/mylab
 
 # Directly exposed (no reverse proxy)
-RATE_LIMIT=30 TRUST_PROXY=0 make run
+docker run ... -e TRUST_PROXY=0 username/mylab
 ```
 
-## Project Structure
+### Rate limiting
 
+Each IP gets a token bucket that refills steadily. Up to `RATE_LIMIT` requests are allowed in a burst, then the client is throttled to `RATE_LIMIT / RATE_LIMIT_WINDOW` requests per second. When rate-limited, the server returns **429 Too Many Requests** with a `Retry-After` header.
+
+---
+
+## Development
+
+```bash
+npm install          # Node deps + composer install
+npm run dev          # starts on localhost:8080 with auto-reload
 ```
-├── bin/
-│   └── server                   # Entry point — boots autoloader, runs kernel
-├── Kernel/
-│   └── ServerKernel.php         # DI wiring, routing, static files, HTTP server
-├── Action/                      # Business logic (use cases)
-│   └── RefreshContainers.php
-├── Domain/                      # Immutable DTOs
-│   ├── Container.php
-│   └── DashboardLink.php
-├── Handler/                     # HTTP adapters
-│   ├── HomeHandler.php
-│   ├── ContainerStreamHandler.php
-│   └── DevReloadHandler.php
-├── Service/                     # Service layer
-│   ├── ContainerStore.php
-│   ├── ContainerSyncService.php
-│   ├── DockerServiceInterface.php
-│   ├── DockerService.php
-│   ├── SseBroadcaster.php
-│   ├── IpResolver.php
-│   └── RateLimiter.php
-├── views/                       # Twig templates
-│   ├── layout.twig
-│   ├── home.twig
-│   └── partials/
-│       ├── container-rows.twig
-│       └── link-cards.twig
-├── public/
-│   └── assets/
-│       └── css/
-│           └── app.min.css      # Compiled Tailwind CSS
-└── docker/
-    └── php.ini                  # Production OPcache + JIT config
+
+`APP_ENV=local` loads Tailwind and daisyUI from CDN — no CSS build step needed.
+
+Test with sample containers:
+
+```bash
+docker compose -f docker-compose.test.yml up -d
 ```
+
+| Task | Command |
+|---|---|
+| Run tests | `make test` or `npm test` |
+| Lint | `make lint` |
+| Format | `make format` |
+| Build CSS | `make css` |
+| Watch CSS | `npm run watch:css` |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Runtime** | PHP 8.2+ (ReactPHP async event loop) |
+| **Routing** | nikic/fast-route |
+| **Templating** | Twig |
+| **Frontend** | HTMX 2.0 + Server-Sent Events |
+| **CSS** | Tailwind CSS v4 + daisyUI v5 |
+| **Docker** | clue/docker-react |
+
+---
+
+## License
+
+MIT

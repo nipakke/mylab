@@ -62,11 +62,12 @@ final class ServerKernel
         $homeHandler = new HomeHandler($containerStore, $this->twig);
 
         $refreshHandler = new ContainerRefreshHandler(
-            new RefreshContainers($this->dockerService, $containerStore, $this->twig),
+            new RefreshContainers($this->dockerService, $containerStore),
+            $this->twig,
         );
 
         $broadcaster = new SseBroadcaster;
-        $streamHandler = new ContainerStreamHandler($broadcaster);
+        $streamHandler = new ContainerStreamHandler($broadcaster, $this->twig);
 
         $devReloadHandler = $this->isDev ? new DevReloadHandler : null;
 
@@ -116,7 +117,6 @@ final class ServerKernel
         $syncService = new ContainerSyncService(
             $this->dockerService,
             $containerStore,
-            $this->twig,
             $broadcaster,
         );
         $syncService->start();

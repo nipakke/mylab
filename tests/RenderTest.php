@@ -31,7 +31,7 @@ test('the partial template loop crashes explicitly if strict type variables are 
 });
 
 test('the layout components parse strictly validated elements into safe output blocks', function () {
-    $container = new Container('sha-test', 'load-balancer', 'stopped', 0);
+    $container = new Container('sha-test', 'load-balancer', 'exited', 0);
 
     $html = $this->twig->render('partials/container-rows.twig', [
         'containers' => [$container],

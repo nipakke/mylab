@@ -7,7 +7,7 @@ namespace Shipped\Backend\Handler;
 use Psr\Http\Message\ServerRequestInterface;
 use React\Http\Message\Response;
 use React\Promise\PromiseInterface;
-use Shipped\Backend\Service\ContainerStore;
+use Shipped\Backend\Service\ContainerStoreInterface;
 use Twig\Environment;
 
 use function React\Promise\resolve;
@@ -21,7 +21,7 @@ use function React\Promise\resolve;
 final class HomeHandler
 {
     public function __construct(
-        private readonly ContainerStore $store,
+        private readonly ContainerStoreInterface $store,
         private readonly Environment $twig,
     ) {}
 
@@ -34,7 +34,7 @@ final class HomeHandler
     {
         return resolve($this->twig->render('home.twig', [
             'title' => 'Core Command Panel',
-            'groups' => $this->store->getGroupedLinks(),
+            'groups' => $this->store->getGroupedLinks(0.0),
         ]))->then(
             fn (string $html): Response => new Response(
                 200,

@@ -63,10 +63,6 @@ final class IpResolver
         '2c0f:f248::/32',
     ];
 
-    private const DOCKER_BRIDGE_START = '172.17.0.0';
-
-    private const DOCKER_BRIDGE_END = '172.17.255.255';
-
     private readonly string $mode;
 
     private readonly string $proxyHeader;

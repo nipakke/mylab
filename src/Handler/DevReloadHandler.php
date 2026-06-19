@@ -56,7 +56,9 @@ final class DevReloadHandler
         );
 
         $stream->on('close', static function () use ($heartbeat): void {
-            Loop::cancelTimer($heartbeat);
+            if ($heartbeat !== null) {
+                Loop::cancelTimer($heartbeat);
+            }
         });
 
         return resolve(new Response(200, $headers, $stream));

@@ -1,15 +1,12 @@
 {% for container in containers %}
+{% set c = container.toArray() %}
 <tr class="border-base-800 hover:bg-base-800/40 transition-colors">
-    <td class="font-mono text-xs text-slate-400">{{ container.id }}</td>
-    <td class="font-bold">{{ container.name }}</td>
+    <td class="font-mono text-xs text-slate-400">{{ c.id }}</td>
+    <td class="font-bold">{{ c.name }}</td>
     <td>
-        {% if container.status == 'running' %}
-            <span class="badge badge-success badge-sm font-semibold text-xs">{{ container.status }}</span>
-        {% else %}
-            <span class="badge badge-error badge-sm font-semibold text-xs">{{ container.status }}</span>
-        {% endif %}
+        <span class="badge {{ c.badgeClass }} badge-sm font-semibold text-xs">{{ c.status }}</span>
     </td>
-    <td class="font-mono text-sm text-slate-300">{{ container.getFormattedMemory() }}</td>
+    <td class="font-mono text-sm text-slate-300">{{ c.memory }}</td>
 </tr>
 {% else %}
 <tr>

@@ -6,21 +6,25 @@ namespace Shipped\Backend\Handler;
 
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Loop;
-use React\EventLoop\TimerInterface;
 use React\Http\Message\Response;
 use React\Promise\PromiseInterface;
 use React\Stream\ThroughStream;
 use Shipped\Backend\Service\SseBroadcaster;
+use Twig\Environment;
 
 use function React\Promise\resolve;
 
 /**
  * SSE endpoint for container-update push events.
  *
- * Opens a persistent Server-Sent Events stream that the
- * SseBroadcaster writes to whenever the container store is
- * refreshed.  The client (HTMX SSE extension) receives
- * rendered HTML fragments and swaps them into the DOM.
+ * Opens a persistent Server-Sent Events stream.  The SseBroadcaster
+ * pushes structured JSON data from the ContainerSyncService; this
+ * handler registers a per-stream Twig render transform so that
+ * clients receive rendered HTML fragments — exactly as they did
+ * before the architectural refactor.
+ *
+ * Rendering is the Handler's responsibility per patterns.md.
+ * The Service layer never touches presentation.
  *
  * Heartbeats keep the connection alive; cleanup runs on close.
  */
@@ -30,6 +34,7 @@ final class ContainerStreamHandler
 
     public function __construct(
         private readonly SseBroadcaster $broadcaster,
+        private readonly Environment $twig,
     ) {}
 
     /**
@@ -48,7 +53,16 @@ final class ContainerStreamHandler
             'X-Accel-Buffering' => 'no',
         ];
 
-        $this->broadcaster->attach($stream);
+        // Register the stream with a Twig render transform.
+        // The SyncService broadcasts JSON arrays; we decode and
+        // render an HTML fragment before it hits the wire.
+        $this->broadcaster->attach($stream, function (string $event, string $jsonData): string {
+            $groups = json_decode($jsonData, true, 512, JSON_THROW_ON_ERROR);
+
+            return $this->twig->render('partials/link-cards.twig', [
+                'groups' => $groups,
+            ]);
+        });
 
         $stream->write("event: connected\ndata: {}\n\n");
 

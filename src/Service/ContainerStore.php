@@ -13,12 +13,12 @@ use function Shipped\Backend\Domain\parseLabels;
 /**
  * In-memory store holding the latest container list and pre-parsed link cache.
  *
- * Labels are parsed once when containers change (update/add/remove) and
+ * Labels are parsed once when containers change (replace/remove) and
  * served from cache on every request — zero parsing overhead per page load.
  */
-final class ContainerStore
+final class ContainerStore implements ContainerStoreInterface
 {
-    /** @var Container[] */
+    /** @var array<string, Container> */
     private array $containers = [];
 
     /** @var DashboardLink[] */
@@ -27,9 +27,22 @@ final class ContainerStore
     /** @var array<string, DashboardLink[]> */
     private array $groupedLinks = [];
 
-    public function getAll(): array
+    /**
+     * @return Container[]
+     */
+    public function all(): array
     {
-        return $this->containers;
+        return array_values($this->containers);
+    }
+
+    public function find(string $id): ?Container
+    {
+        return $this->containers[$id] ?? null;
+    }
+
+    public function count(): int
+    {
+        return count($this->containers);
     }
 
     /**
@@ -43,33 +56,46 @@ final class ContainerStore
     /**
      * @return array<string, DashboardLink[]>
      */
-    public function getGroupedLinks(): array
+    public function getGroupedLinks(float $memoryThreshold): array
     {
-        return $this->groupedLinks;
+        if ($memoryThreshold <= 0.0) {
+            return $this->groupedLinks;
+        }
+
+        $thresholdBytes = (int) ($memoryThreshold * 1024 * 1024);
+
+        $filtered = [];
+        foreach ($this->groupedLinks as $group => $links) {
+            $passing = array_filter(
+                $links,
+                function (DashboardLink $link) use ($thresholdBytes): bool {
+                    $container = $this->containers[$link->containerId] ?? null;
+
+                    return $container !== null && $container->memoryUsageBytes >= $thresholdBytes;
+                },
+            );
+
+            if ($passing !== []) {
+                $filtered[$group] = array_values($passing);
+            }
+        }
+
+        return $filtered;
     }
 
     /**
      * Replace the stored container list with a fresh snapshot
      * and rebuild the link cache.
      *
-     * @param  Container[]  $containers
+     * @param Container[] $containers
      */
-    public function update(array $containers): void
+    public function replace(array $containers): void
     {
         $indexed = [];
         foreach ($containers as $container) {
             $indexed[$container->id] = $container;
         }
         $this->containers = $indexed;
-        $this->rebuildCache();
-    }
-
-    /**
-     * Add or replace a single container and rebuild the link cache.
-     */
-    public function add(Container $container): void
-    {
-        $this->containers[$container->id] = $container;
         $this->rebuildCache();
     }
 

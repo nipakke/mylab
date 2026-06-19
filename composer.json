@@ -27,8 +27,18 @@
       "pestphp/pest-plugin": true
     }
   },
-  "require-dev": {
-    "laravel/pint": "^1.29",
-    "pestphp/pest": "^3.0"
-  }
+    "require-dev": {
+        "laravel/pint": "^1.29",
+        "pestphp/pest": "^3.0",
+        "php-parallel-lint/php-parallel-lint": "^1.4",
+        "phpstan/phpstan": "^2.2"
+    },
+    "scripts": {
+        "format": "pint",
+        "lint": [
+            "pint --test",
+            "parallel-lint src/",
+            "phpstan analyse --configuration=phpstan.neon"
+        ]
+    }
 }

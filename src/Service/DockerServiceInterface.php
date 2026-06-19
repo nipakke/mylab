@@ -25,7 +25,7 @@ interface DockerServiceInterface
      *
      * @param  float|null  $since  UNIX timestamp — only events after this time
      * @param  float|null  $until  UNIX timestamp — only events before this time
-     * @param  array|null  $filters  e.g. ['type' => ['container'], 'event' => ['start', 'die']]
+     * @param  array<string, array<array-key, string>>|null  $filters  e.g. ['type' => ['container'], 'event' => ['start', 'die']]
      */
     public function eventsStream(?float $since = null, ?float $until = null, ?array $filters = null): ReadableStreamInterface;
 }

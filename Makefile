@@ -1,4 +1,4 @@
-.PHONY: run build test lint clean
+.PHONY: run build test lint format clean
 
 run:
 	APP_ENV=local php src/server.php
@@ -10,7 +10,9 @@ test:
 	./vendor/bin/pest
 
 lint:
-	php -l src/server.php
+	composer lint
+format:
+	composer format
 
 clean:
 	rm -rf cache/twig

@@ -23,6 +23,9 @@ ENV APP_ENV=production \
 WORKDIR /app
 COPY . /app
 
+# Production PHP config: OPcache + JIT optimizations
+COPY docker/php.ini /usr/local/etc/php/conf.d/99-performance.ini
+
 # Run vendor clean updates
 RUN composer install --no-dev --optimize-autoloader
 

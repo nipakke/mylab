@@ -1,8 +1,8 @@
-<!-- Context: project-intelligence/technical | Priority: high | Version: 1.0 | Updated: 2026-06-19 -->
+<!-- Context: project-intelligence/technical | Priority: high | Version: 1.1 | Updated: 2026-06-19 -->
 
 # Technical Domain — Dash
 
-> PHP hypermedia monolith for real-time Docker container monitoring. Server-rendered HTML with HTMX — no client-side JavaScript framework.
+> PHP hypermedia monolith for real-time Docker container monitoring. Server-rendered HTML with HTMX and SSE — no client-side JavaScript framework.
 
 ## Quick Reference
 
@@ -19,38 +19,52 @@
 | Templates | Twig | ^3.0 | Server-side rendering, template inheritance, safe output |
 | Routing | FastRoute | ^1.3 | Simple, fast regex-based router (by Nikita Popov) |
 | Docker API | clue/docker-react | ^1.6 | Async Docker Engine API client on ReactPHP event loop |
-| Frontend | HTMX | CDN | Hypermedia-driven UI — partial swaps |
+| Real-time | SSE (Server-Sent Events) | Native | Push container updates to browser via HTMX SSE extension |
+| Frontend | HTMX | CDN | Hypermedia-driven UI — partial swaps + SSE auto-refresh |
 | CSS | Tailwind CSS + daisyUI | CDN (dev) / compiled (prod) | Utility-first CSS with component library |
 | Server | FrankenPHP + Caddy | Dockerfile | Production-grade PHP app server with auto-SSL |
 | Testing | Pest | ^3.0 | Elegant PHP testing with strict type assertions |
 | Linting | Laravel Pint | ^1.29 | PHP CS Fixer preset, minimal config |
+| Static Analysis | PHPStan | ^2.2 | Level 8 — strict types, return types, null safety |
+| Syntax Check | Parallel-Lint | ^1.4 | Fast PHP syntax validation across all source files |
 
 ## Architecture Pattern
 
 ```
 Type: Hypermedia Monolith
-Pattern: Handler → Action → Service → External API
-         └── Twig renders HTML (HTMX for dynamic behavior)
+Pattern: Handler → ContainerStore (read path, direct)
+         Handler → Action → Service → External API (write/refresh path)
+         └── Twig renders HTML (HTMX + SSE for dynamic behavior)
 ```
 
 ```
-Browser (HTMX)
+Browser (HTMX + SSE)
        │
        ▼
 FrankenPHP / Caddy (port 8000)
   ├── /assets/* → static files
   └── /* → reverse proxy → ReactPHP worker (127.0.0.1:8080)
               │
+              ├── IpResolver (client IP, proxy-aware)
+              ├── RateLimiter (token-bucket, per-IP)
               ├── FastRoute dispatcher
               ├── Handler (HTTP adapter, thin)
-              │     └── Action (business logic, use-case)
-              │           └── Service (Docker API client, snapshot store)
+              │     ├── HomeHandler → ContainerStore → Twig (read)
+              │     ├── ContainerRefreshHandler → RefreshContainers → DockerService (refresh)
+              │     ├── ContainerStreamHandler → SseBroadcaster (SSE push)
+              │     └── DevReloadHandler (SSE, dev-only)
+              │
+              ├── ContainerSyncService (background sync)
+              │     ├── Docker events stream (real-time)
+              │     ├── Periodic fallback (30s safety net)
+              │     └── SseBroadcaster → SSE clients (push updates)
+              │
               └── Twig templates (layout → home → partials)
 ```
 
 ### Why This Architecture?
 
-The hypermedia monolith pattern was chosen to eliminate the complexity of a SPA frontend. Instead of maintaining a separate JavaScript application with API contracts, state management, and build tooling, all rendering happens server-side. HTMX handles partial page updates via declarative HTML attributes — without writing any JavaScript.
+The hypermedia monolith pattern was chosen to eliminate the complexity of a SPA frontend. Instead of maintaining a separate JavaScript application with API contracts, state management, and build tooling, all rendering happens server-side. HTMX handles partial page updates via declarative HTML attributes, while the SSE extension provides real-time push updates — without writing any JavaScript.
 
 **Alternatives considered**: 
 - SvelteKit + PHP API (monorepo) — rejected: unnecessary complexity, dual build pipelines, type sync overhead
@@ -65,48 +79,51 @@ src/
 ├── ServerKernel.php            # DI wiring, route registration, ReactPHP HTTP server
 │
 ├── Action/                     # Business logic (use-case layer)
-│   ├── ListContainers.php      # Fetches containers → renders home.twig (async Promise)
-│   └── RefreshContainers.php   # Re-fetches → renders container-rows.twig for HTMX swap
+│   └── RefreshContainers.php   # Re-fetches containers → updates store → renders partial
 │
 ├── Domain/                     # Immutable Data Transfer Objects
-│   └── Container.php           # id, name, status, memoryUsageBytes, labels
+│   ├── Container.php           # id, name, status, memoryUsageBytes, labels
+│   ├── DashboardLink.php       # Parsed service link from Docker container labels
+│   └── label-parser.php        # Docker label parsing logic (pure functions)
 │
-├── Handler/                    # HTTP adapter layer (thin — delegates to Action)
-│   ├── HomeHandler.php         # GET / → ListContainers → HTML Response
-│   └── ContainerRefreshHandler.php  # POST /containers/refresh → HTML partial
-│
-├── Job/                        # Background recurring tasks
-│   └── CollectContainers.php   # Periodic (10s) → ContainerStore
+├── Handler/                    # HTTP adapter layer (thin — delegates to Store or Action)
+│   ├── HomeHandler.php              # GET / → reads ContainerStore → renders home.twig
+│   ├── ContainerRefreshHandler.php  # POST /containers/refresh → HTMX partial reload
+│   ├── ContainerStreamHandler.php   # GET /containers/stream → SSE endpoint for push updates
+│   └── DevReloadHandler.php         # GET /dev/reload → SSE dev-mode live reload
 │
 ├── Service/                    # Service / infrastructure layer
-│   ├── ContainerStore.php            # In-memory store — latest container list
-│   ├── DockerServiceInterface.php   # Contract: listAll(), eventsStream()
-│   └── DockerService.php            # clue/docker-react Docker API client
-│
-├── Domain/                     # Domain utilities
-│   └── label-parser.php        # Docker label parsing logic
+│   ├── ContainerStore.php            # In-memory store — latest container list + grouped links
+│   ├── ContainerSyncService.php      # Three-phase sync: snapshot → events → periodic fallback
+│   ├── DockerServiceInterface.php    # Contract: listAll(), eventsStream()
+│   ├── DockerService.php             # clue/docker-react Docker API client
+│   ├── SseBroadcaster.php            # Manages connected SSE streams, broadcasts events
+│   ├── RateLimiter.php               # In-memory token-bucket rate limiter (per-IP)
+│   └── IpResolver.php                # Resolves real client IP (reverse-proxy aware)
 │
 └── views/                      # Twig templates
     ├── layout.twig             # Base HTML (HTMX, Tailwind, daisyUI)
-    ├── home.twig               # Main page: container table
+    ├── home.twig               # Main page: link cards
     └── partials/
         ├── container-rows.twig # Table rows for HTMX swap
         └── link-cards.twig     # Dashboard navigation links
 ```
 
 **Key Directories**:
-- `src/Action/` — Business logic. Each action is a single use-case. Returns Promises for async operations.
-- `src/Domain/` — Immutable DTOs. No logic, just typed data carriers.
-- `src/Handler/` — Thin HTTP adapters. Parses request, delegates to Action, formats Response.
-- `src/Service/` — Infrastructure concerns. Docker API client, in-memory storage.
+- `src/Action/` — Business logic for write/refresh use-cases. Each action is a single use-case. Returns Promises for async operations.
+- `src/Domain/` — Immutable DTOs. No logic, just typed data carriers. All classes are `final readonly`.
+- `src/Handler/` — Thin HTTP adapters. Parses request, delegates to Action or reads from Store directly, formats Response.
+- `src/Service/` — Infrastructure concerns. Docker API client, in-memory storage, SSE broadcasting, rate limiting, IP resolution.
 - `src/views/` — Twig templates. Layout inheritance: `layout.twig` → `home.twig` → partials.
 
 ## Route Table
 
 | Method | Path | Handler | Action | Description |
 |--------|------|---------|--------|-------------|
-| GET | `/` | HomeHandler | ListContainers | Full page render |
-| POST | `/containers/refresh` | ContainerRefreshHandler | RefreshContainers | HTMX partial swap |
+| GET | `/` | HomeHandler | — (reads ContainerStore directly) | Full page render |
+| POST | `/containers/refresh` | ContainerRefreshHandler::handle | RefreshContainers | HTMX partial swap |
+| GET | `/containers/stream` | ContainerStreamHandler | — (SSE broadcast consumer) | SSE push endpoint for container updates |
+| GET | `/dev/reload` | DevReloadHandler | — (SSE heartbeat) | SSE dev-mode live reload (APP_ENV=local only) |
 
 ## Key Technical Decisions
 
@@ -114,15 +131,19 @@ src/
 |----------|-----------|--------|
 | ReactPHP event loop | Single-process async — no nginx, no FPM, no process managers | Simpler deployment, lower resource usage |
 | Server-rendered HTML (no SPA) | Eliminates frontend build step, API contracts, state sync | Faster development, fewer moving parts |
-| HTMX for dynamic UI | Declarative partial updates in HTML attributes | No JavaScript to write for interactivity |
+| HTMX + SSE for dynamic UI | Declarative partial updates + real-time push in HTML attributes | No JavaScript to write for interactivity |
 | Immutable domain DTOs | Thread-safe, predictable, easy to test | Safer concurrent access in async context |
 | In-memory container store | Latest container list only — no history | Fast reads, simple, no persistence needed for ephemeral data |
+| Three-phase container sync | Snapshot → event stream → periodic fallback prevents stale data | Near-real-time updates with safety net |
+| Token-bucket rate limiter | Per-IP request throttling with configurable burst/window | Prevents abuse, no external service needed |
+| Reverse-proxy-aware IP resolver | Trust modes: none, always, auto, Cloudflare, Traefik | Correct client IP behind proxies and CDNs |
 
 ## Integration Points
 
 | System | Purpose | Protocol | Direction |
 |--------|---------|----------|-----------|
-| Docker Engine API | Container listing, inspection | HTTP (Unix socket) | Outbound |
+| Docker Engine API | Container listing, inspection, event stream | HTTP (Unix socket) | Outbound |
+| Browser (SSE) | Real-time container update push | SSE (HTTP long-lived) | Outbound |
 
 ## Development Environment
 
@@ -152,9 +173,3 @@ Monitoring: Your monitoring tool of choice
 - [x] Know integration points and dependencies
 - [x] Be able to set up local development environment
 - [x] Know how to run tests and deploy
-
-## Related Files
-
-- `business-domain.md` — Why this technical foundation exists
-- `business-tech-bridge.md` — How business needs map to technical solutions
-- `decisions-log.md` — Full decision history with context

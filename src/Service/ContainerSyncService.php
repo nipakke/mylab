@@ -6,7 +6,8 @@ namespace Shipped\Backend\Service;
 
 use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
-use Twig\Environment;
+use Shipped\Backend\Domain\Container;
+use Shipped\Backend\Domain\DashboardLink;
 
 /**
  * Orchestrates container data synchronisation between the Docker daemon
@@ -36,8 +37,7 @@ final class ContainerSyncService
 
     public function __construct(
         private readonly DockerServiceInterface $docker,
-        private readonly ContainerStore $store,
-        private readonly Environment $twig,
+        private readonly ContainerStoreInterface $store,
         private readonly SseBroadcaster $broadcaster,
     ) {}
 
@@ -59,28 +59,12 @@ final class ContainerSyncService
             ],
         );
 
-        $stream->on('data', function (array $event): void {
-            $containerId = $event['Actor']['ID'] ?? null;
-            $action = $event['Action'] ?? '';
+        $stream->on('data', $this->handleDockerEvent(...));
 
-            if ($containerId === null || $action === '') {
-                return;
-            }
-
-            $shortId = substr($containerId, 0, 12);
-            $name = $event['Actor']['Attributes']['name'] ?? $shortId;
-
-            echo "[ContainerSyncService] {$action} → {$name} ({$shortId})\n";
-
-            $this->scheduleRefresh();
-        });
-
-        $stream->on('error', function (\Throwable $error): void {
-            fwrite(STDERR, "[ContainerSyncService] Event stream error: {$error->getMessage()}\n");
-        });
+        $stream->on('error', $this->handleEventStreamError(...));
 
         // Phase 3 — periodic fallback (safety net against missed events)
-        Loop::addPeriodicTimer(self::FALLBACK_INTERVAL, fn () => $this->refreshAll());
+        Loop::addPeriodicTimer(self::FALLBACK_INTERVAL, $this->refreshAll(...));
     }
 
     private function scheduleRefresh(): void
@@ -126,28 +110,84 @@ final class ContainerSyncService
         $this->refreshing = true;
 
         $this->docker->listAll()->then(
-            function (array $containers): void {
-                $this->store->update($containers);
-                $this->broadcastUpdate();
-            },
+            $this->applyContainerList(...),
             $this->logError('Periodic refresh'),
         )->then(
-            fn () => $this->refreshing = false,
-            fn () => $this->refreshing = false,
+            $this->finishRefresh(...),
+            $this->finishRefresh(...),
         );
     }
 
     /**
-     * Render the current store state and push it to all
-     * connected SSE clients as an HTML fragment.
+     * Push the current store state to all connected SSE clients
+     * as structured JSON data. Presentation (Twig rendering) is
+     * the responsibility of the Handler layer — this Service
+     * broadcasts only domain data.
      */
     private function broadcastUpdate(): void
     {
-        $html = $this->twig->render('partials/link-cards.twig', [
-            'groups' => $this->store->getGroupedLinks(),
-        ]);
+        $groupedLinks = $this->store->getGroupedLinks(0.0);
 
-        $this->broadcaster->broadcast('container-update', $html);
+        $data = [];
+        foreach ($groupedLinks as $groupName => $links) {
+            $data[$groupName] = array_map(
+                static fn (DashboardLink $link): array => $link->toArray(),
+                $links,
+            );
+        }
+
+        $json = json_encode($data, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+        echo "[SSE] Broadcasting update — ".count($data).' groups — '.json_encode(array_keys($data))."\n";
+        $this->broadcaster->broadcast('container-update', $json);
+    }
+
+    /**
+     * Handle a single Docker event from the real-time stream.
+     *
+     * @param  array<array-key, mixed>  $event
+     */
+    private function handleDockerEvent(array $event): void
+    {
+        $containerId = $event['Actor']['ID'] ?? null;
+        $action = $event['Action'] ?? '';
+
+        if ($containerId === null || $action === '') {
+            return;
+        }
+
+        $shortId = substr($containerId, 0, 12);
+        $name = $event['Actor']['Attributes']['name'] ?? $shortId;
+
+        echo "[ContainerSyncService] {$action} → {$name} ({$shortId})\n";
+
+        $this->scheduleRefresh();
+    }
+
+    /**
+     * Handle an error from the Docker event stream.
+     */
+    private function handleEventStreamError(\Throwable $error): void
+    {
+        fwrite(STDERR, "[ContainerSyncService] Event stream error: {$error->getMessage()}\n");
+    }
+
+    /**
+     * Apply a fresh container list to the store and push updates to clients.
+     *
+     * @param  Container[]  $containers
+     */
+    private function applyContainerList(array $containers): void
+    {
+        $this->store->replace($containers);
+        $this->broadcastUpdate();
+    }
+
+    /**
+     * Release the refresh lock so subsequent refreshes can proceed.
+     */
+    private function finishRefresh(): void
+    {
+        $this->refreshing = false;
     }
 
     /**

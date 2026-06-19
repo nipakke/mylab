@@ -55,6 +55,7 @@ function parseLabel(Container $container): ?DashboardLink
         description: $description !== null && $description !== '' ? $description : null,
         group: $group !== '' ? $group : DEFAULT_GROUP,
         weight: $weight,
+        dockerStatus: $container->dockerStatus,
     );
 }
 

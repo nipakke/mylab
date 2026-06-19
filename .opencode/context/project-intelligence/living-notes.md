@@ -17,7 +17,7 @@
 | No error handling for Docker socket unavailable | Dashboard shows empty/error state | Medium | Add graceful fallback UI + retry logic |
 | Twig CDN in dev mode (Tailwind/daisyUI) | No offline dev, version pinning | Low | Acceptable — prod uses compiled CSS |
 | No authentication | Anyone with network access can see containers | Medium | Add basic auth or Tailscale requirement |
-| Makefile lint only checks server.php | Rest of src/ not syntax-checked | Low | Replace with `./vendor/bin/pint --test` |
+| Makefile lint only checks server.php | Rest of src/ not syntax-checked | Low | ✅ **Resolved 2026-06-19** — `composer lint` runs pint --test + parallel-lint + phpstan (level 8) |
 | Stale `.vscode/settings.json` | Configured for Go, not PHP | Low | **Removed 2026-06-19** |
 
 ### Technical Debt Details

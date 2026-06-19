@@ -8,25 +8,30 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {% for link in links %}
+        {% if link is iterable %}
+            {% set l = link %}
+        {% else %}
+            {% set l = link.toArray() %}
+        {% endif %}
         <div class="relative w-full">
-            <span class="absolute top-2 left-2 z-10 w-2.5 h-2.5 rounded-full {{ link.status == 'running' ? 'bg-success' : 'bg-error' }}"
-                  title="{{ link.status }}"></span>
-            <a href="{{ link.url ?: '#' }}"
-               class="card card-border bg-base-200 border-base-300 hover:border-primary/50 hover:bg-base-300 transition-all duration-200 w-full {{ link.url ? 'cursor-pointer' : 'cursor-default pointer-events-none' }}">
+<span class="absolute top-2 right-2 z-10 w-2.5 h-2.5 rounded-full {{ l.statusClass }}" title="{{ l.dockerStatus ? l.dockerStatus : l.status }}" data-status="{{ l.status }}"></span>
+            <a href="{{ l.url ?: '#' }}"
+               target="_blank" rel="noopener noreferrer"
+               class="card card-border bg-base-200 border-base-300 hover:border-primary/50 hover:bg-base-300 transition-all duration-200 w-full {{ l.url ? 'cursor-pointer' : 'cursor-default pointer-events-none' }}">
                 <div class="card-body p-5">
                     <div class="flex items-start gap-3">
-                        {% if link.icon %}
+                        {% if l.icon %}
                         <div class="w-10 h-10 rounded-lg bg-base-300 flex items-center justify-center flex-shrink-0">
-                            <span class="text-primary text-lg font-bold">{{ link.icon|slice(0, 2) }}</span>
+                            <span class="text-primary text-lg font-bold">{{ l.icon|slice(0, 2) }}</span>
                         </div>
                         {% endif %}
                         <div class="min-w-0 flex-1">
-                            <h3 class="card-title text-base font-semibold truncate">{{ link.name }}</h3>
-                            {% if link.description %}
-                            <p class="text-xs text-base-content/60 mt-1 line-clamp-2">{{ link.description }}</p>
+                            <h3 class="card-title text-base font-semibold truncate">{{ l.name }}</h3>
+                            {% if l.description %}
+                            <p class="text-xs text-base-content/60 mt-1 line-clamp-2">{{ l.description }}</p>
                             {% endif %}
-                            {% if link.url %}
-                            <p class="text-xs text-base-content/40 mt-1.5 truncate font-mono">{{ link.url }}</p>
+                            {% if l.url %}
+                            <p class="text-xs text-base-content/40 mt-1.5 truncate font-mono">{{ l.url }}</p>
                             {% endif %}
                         </div>
                     </div>

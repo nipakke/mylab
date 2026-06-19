@@ -16,5 +16,12 @@ Thumbs.db
 .env
 .env.local
 
+# Dependencies
+node_modules/
+package-lock.json
+
+# Turbo
+.turbo
+
 # OpenCode temp sessions
 .tmp/

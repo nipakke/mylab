@@ -4,10 +4,10 @@ APP_NAME := dashboard-server
 BIN_DIR  := bin
 
 run:
-	go run ./backend/cmd/server
+	go run ./apps/backend/cmd/server
 
 build:
-	go build -o $(BIN_DIR)/$(APP_NAME) ./backend/cmd/server
+	go build -o $(BIN_DIR)/$(APP_NAME) ./apps/backend/cmd/server
 
 test:
 	go test ./... -count=1 -v

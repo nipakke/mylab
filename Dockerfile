@@ -4,7 +4,7 @@ WORKDIR /src
 COPY go.mod ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -o /bin/server ./backend/cmd/server
+RUN CGO_ENABLED=0 go build -o /bin/server ./apps/backend/cmd/server
 
 # ---- run ----
 FROM alpine:3.20

@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/example/dashboard/backend/internal/handler"
-	"github.com/example/dashboard/backend/internal/middleware"
+	"github.com/example/dashboard/apps/backend/internal/handler"
+	"github.com/example/dashboard/apps/backend/internal/middleware"
 )
 
 // Config holds everything needed to run the HTTP server.

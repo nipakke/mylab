@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/example/dashboard/backend/internal/server"
+	"github.com/example/dashboard/apps/backend/internal/server"
 )
 
 func main() {

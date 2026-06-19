@@ -37,8 +37,6 @@ final readonly class Container
         $state = trim((string) ($data['State'] ?? 'unknown'));
         $dockerStatus = (string) ($data['Status'] ?? '');
 
-        echo "[Docker] {$name} → state={$state}  status={$dockerStatus}\n";
-
         return new self(
             id: substr($data['Id'], 0, 12),
             name: $name,

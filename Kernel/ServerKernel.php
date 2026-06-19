@@ -201,10 +201,6 @@ final class ServerKernel
         );
         $syncService->start();
 
-        Loop::addPeriodicTimer(5.0, function (): void {
-            echo '['.date('H:i:s')."] Async heartbeat — worker alive\n";
-        });
-
         $port = (int) (getenv('PORT') ?: 8080);
         $socket = new SocketServer("0.0.0.0:{$port}");
         $http->listen($socket);

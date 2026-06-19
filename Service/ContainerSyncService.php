@@ -137,7 +137,7 @@ final class ContainerSyncService
         }
 
         $json = json_encode($data, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
-        echo '[SSE] Broadcasting update — '.count($data).' groups — '.json_encode(array_keys($data))."\n";
+        echo '[SSE] Broadcasting update — '.count($data)." groups\n";
         $this->broadcaster->broadcast('container-update', $json);
     }
 
@@ -158,7 +158,7 @@ final class ContainerSyncService
         $shortId = substr($containerId, 0, 12);
         $name = $event['Actor']['Attributes']['name'] ?? $shortId;
 
-        echo "[ContainerSyncService] {$action} → {$name} ({$shortId})\n";
+        echo "[ContainerSyncService] Event received ({$action}), scheduling refresh...\n";
 
         $this->scheduleRefresh();
     }
@@ -179,6 +179,7 @@ final class ContainerSyncService
     private function applyContainerList(array $containers): void
     {
         $this->store->replace($containers);
+        echo '[Docker] Refreshed all — '.count($containers)." containers\n";
         $this->broadcastUpdate();
     }
 

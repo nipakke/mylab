@@ -7,6 +7,7 @@
 .idea/
 *.swp
 *.swo
+.vscode/
 
 # OS
 .DS_Store
@@ -15,16 +16,20 @@ Thumbs.db
 # Env
 .env
 .env.local
+.env.backup
+.env.production
 
 # Dependencies
 node_modules/
 package-lock.json
+/vendor/
 
-# Nx
-.nx/cache
-.nx/workspace-data
+# PHP
+.phpunit.cache/
+.phpunit.result.cache
+
+# Cache
+/cache/
 
 # OpenCode temp sessions
 .tmp/
-apps/frontend/.turbo/turbo-build.log
-apps/frontend/.turbo/turbo-lint.log

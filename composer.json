@@ -5,6 +5,7 @@
   "license": "MIT",
   "require": {
     "php": "^8.2",
+    "clue/docker-react": "^1.6",
     "react/http": "^1.9",
     "react/stream": "^1.4",
     "twig/twig": "^3.0",

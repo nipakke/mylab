@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace Shipped\Backend\DTO;
+namespace Shipped\Backend\Domain;
 
 class Container
 {
     public function __construct(
-        public string $id,
-        public string $name,
-        public string $status,
-        public int $memoryUsageBytes
+        public readonly string $id,
+        public readonly string $name,
+        public readonly string $status,
+        public readonly int $memoryUsageBytes
     ) {}
 
     /**

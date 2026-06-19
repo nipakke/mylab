@@ -1,12 +1,12 @@
 {
-	"name": "dash",
-	"private": true,
-	"scripts": {
-		"dev": "nx run backend:dev",
-		"test": "nx run backend:test"
-	},
-	"packageManager": "pnpm@11.8.0",
-	"devDependencies": {
-		"nx": "^23.0.0"
-	}
+  "name": "dash",
+  "private": true,
+  "scripts": {
+    "dev": "nodemon --config nodemon.json",
+    "test": "vendor/bin/pest",
+    "postinstall": "composer install"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
 }

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
-use Shipped\Backend\DTO\Container;
+use Shipped\Backend\Domain\Container;
 
 beforeEach(function () {
     // Instantiate isolated mock rendering parameters before each run block

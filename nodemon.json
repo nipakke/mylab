@@ -1,0 +1,8 @@
+{
+  "watch": ["src"],
+  "ext": "php",
+  "exec": "php src/server.php",
+  "env": {
+    "APP_ENV": "local"
+  }
+}

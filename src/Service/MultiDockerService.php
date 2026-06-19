@@ -10,6 +10,8 @@ use React\Stream\ReadableStreamInterface;
 use React\Stream\ThroughStream;
 use Shipped\Backend\Domain\Container;
 
+use function React\Promise\Timer\timeout;
+
 /**
  * Aggregates multiple DockerService instances behind a single
  * DockerServiceInterface, presenting a unified view of containers
@@ -41,10 +43,11 @@ final class MultiDockerService implements DockerServiceInterface
     /**
      * List containers from every backend, merge, and deduplicate.
      *
-     * Each service is called independently. Failures are caught per-service
-     * and logged to STDERR; the failed service simply contributes an empty
-     * array. React\Promise\all() waits for every promise (success or
-     * recovered) before merging.
+     * Each service is called independently with a 2-second deadline.
+     * Failures (including timeouts) are caught per-service and logged
+     * to STDERR; the failed service simply contributes an empty array.
+     * Promise\all() waits for every promise (success or recovered)
+     * before merging.
      *
      * @return PromiseInterface<Container[]>
      */
@@ -53,7 +56,7 @@ final class MultiDockerService implements DockerServiceInterface
         $promises = [];
 
         foreach ($this->services as $service) {
-            $promises[] = $service->listAll()->then(
+            $promises[] = timeout($service->listAll(), 2.0)->then(
                 static fn (array $containers): array => $containers,
                 static function (\Throwable $e): array {
                     fwrite(STDERR, "[MultiDockerService] Service failed: {$e->getMessage()}\n");

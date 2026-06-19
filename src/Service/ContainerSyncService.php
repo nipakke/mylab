@@ -6,6 +6,7 @@ namespace Shipped\Backend\Service;
 
 use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
+use Twig\Environment;
 
 /**
  * Orchestrates container data synchronisation between the Docker daemon
@@ -36,6 +37,8 @@ final class ContainerSyncService
     public function __construct(
         private readonly DockerServiceInterface $docker,
         private readonly ContainerStore $store,
+        private readonly Environment $twig,
+        private readonly SseBroadcaster $broadcaster,
     ) {}
 
     /**
@@ -123,12 +126,28 @@ final class ContainerSyncService
         $this->refreshing = true;
 
         $this->docker->listAll()->then(
-            fn (array $containers) => $this->store->update($containers),
+            function (array $containers): void {
+                $this->store->update($containers);
+                $this->broadcastUpdate();
+            },
             $this->logError('Periodic refresh'),
         )->then(
             fn () => $this->refreshing = false,
             fn () => $this->refreshing = false,
         );
+    }
+
+    /**
+     * Render the current store state and push it to all
+     * connected SSE clients as an HTML fragment.
+     */
+    private function broadcastUpdate(): void
+    {
+        $html = $this->twig->render('partials/link-cards.twig', [
+            'groups' => $this->store->getGroupedLinks(),
+        ]);
+
+        $this->broadcaster->broadcast('container-update', $html);
     }
 
     /**

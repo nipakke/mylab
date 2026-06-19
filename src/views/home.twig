@@ -14,4 +14,13 @@
 <div id="link-cards-container">
     {% include "partials/link-cards.twig" %}
 </div>
+
+<script>
+(function () {
+    var es = new EventSource('/containers/stream');
+    es.addEventListener('container-update', function (e) {
+        document.getElementById('link-cards-container').innerHTML = e.data;
+    });
+})();
+</script>
 {% endblock %}

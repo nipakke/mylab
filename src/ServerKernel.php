@@ -13,12 +13,14 @@ use React\Http\Message\Response;
 use React\Socket\SocketServer;
 use Shipped\Backend\Action\RefreshContainers;
 use Shipped\Backend\Handler\ContainerRefreshHandler;
+use Shipped\Backend\Handler\ContainerStreamHandler;
 use Shipped\Backend\Handler\DevReloadHandler;
 use Shipped\Backend\Handler\HomeHandler;
 use Shipped\Backend\Service\ContainerStore;
 use Shipped\Backend\Service\ContainerSyncService;
 use Shipped\Backend\Service\DockerService;
 use Shipped\Backend\Service\DockerServiceInterface;
+use Shipped\Backend\Service\SseBroadcaster;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
@@ -54,16 +56,21 @@ final class ServerKernel
             new RefreshContainers($this->dockerService, $containerStore, $this->twig),
         );
 
+        $broadcaster = new SseBroadcaster;
+        $streamHandler = new ContainerStreamHandler($broadcaster);
+
         $devReloadHandler = $this->isDev ? new DevReloadHandler : null;
 
         $dispatcher = FastRoute\simpleDispatcher(
             function (FastRoute\RouteCollector $r) use (
                 $homeHandler,
                 $refreshHandler,
+                $streamHandler,
                 $devReloadHandler,
             ): void {
                 $r->addRoute('GET', '/', $homeHandler);
                 $r->addRoute('POST', '/containers/refresh', $refreshHandler->handle(...));
+                $r->addRoute('GET', '/containers/stream', $streamHandler);
 
                 if ($devReloadHandler !== null) {
                     $r->addRoute('GET', '/dev/reload', $devReloadHandler);
@@ -87,6 +94,8 @@ final class ServerKernel
         $syncService = new ContainerSyncService(
             $this->dockerService,
             $containerStore,
+            $this->twig,
+            $broadcaster,
         );
         $syncService->start();
 

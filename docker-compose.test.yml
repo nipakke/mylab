@@ -1,0 +1,48 @@
+services:
+  # ── Monitoring group ──────────────────────────────
+  uptime:
+    image: nginx:alpine
+    container_name: dash-uptime
+    labels:
+      dash.name: "Uptime Kuma"
+      dash.url: "https://status.local"
+      dash.icon: "uptimekuma"
+      dash.group: "Monitoring"
+      dash.description: "Status page for all services"
+      dash.weight: "10"
+
+  grafana:
+    image: nginx:alpine
+    container_name: dash-grafana
+    labels:
+      dash.name: "Grafana"
+      dash.url: "https://grafana.local"
+      dash.icon: "grafana"
+      dash.group: "Monitoring"
+      dash.description: "Metrics and dashboards"
+      dash.weight: "20"
+
+  # ── Media group ───────────────────────────────────
+  plex:
+    image: nginx:alpine
+    container_name: dash-plex
+    labels:
+      dash.name: "Plex"
+      dash.url: "https://media.local"
+      dash.icon: "plex"
+      dash.group: "Media"
+      dash.description: "Media streaming server"
+      dash.weight: "10"
+
+  # ── Hidden (no dash labels) ───────────────────────
+  hidden:
+    image: nginx:alpine
+    container_name: dash-hidden
+
+  # ── Disabled explicitly ──────────────────────────
+  disabled:
+    image: nginx:alpine
+    container_name: dash-disabled
+    labels:
+      dash.enable: "false"
+      dash.name: "Should not appear"

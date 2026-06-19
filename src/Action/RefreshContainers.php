@@ -10,14 +10,8 @@ use Shipped\Backend\Service\DockerServiceInterface;
 use Twig\Environment;
 
 /**
- * Fetches fresh container data from Docker and renders the HTMX table-row partial.
- *
- * Pipeline:
- *   DockerService.listAll() → update ContainerStore → Twig render(partials/container-rows.twig)
- *
- * Returns a PromiseInterface<string> so callers can attach their own
- * fulfilment/rejection handlers or feed the result directly into a ReactPHP
- * response body.
+ * Fetches fresh container data from Docker, updates the store
+ * (which rebuilds the link cache), and renders the HTMX partial.
  */
 final class RefreshContainers
 {
@@ -38,8 +32,8 @@ final class RefreshContainers
             function (array $containers): string {
                 $this->store->update($containers);
 
-                return $this->twig->render('partials/container-rows.twig', [
-                    'containers' => $containers,
+                return $this->twig->render('partials/link-cards.twig', [
+                    'groups' => $this->store->getGroupedLinks(),
                 ]);
             },
         );

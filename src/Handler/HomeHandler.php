@@ -7,19 +7,22 @@ namespace Shipped\Backend\Handler;
 use Psr\Http\Message\ServerRequestInterface;
 use React\Http\Message\Response;
 use React\Promise\PromiseInterface;
-use Shipped\Backend\Action\ListContainers;
+use Shipped\Backend\Service\ContainerStore;
+use Twig\Environment;
+
+use function React\Promise\resolve;
 
 /**
  * HTTP handler for the GET / route.
  *
- * Thin adapter: accepts the incoming request, delegates all business
- * logic to ListContainers, and wraps the rendered HTML in
- * a PSR-7 Response with the appropriate Content-Type header.
+ * Reads pre-parsed grouped links from the ContainerStore cache
+ * and renders the full page via Twig. No label parsing on request.
  */
 final class HomeHandler
 {
     public function __construct(
-        private readonly ListContainers $action,
+        private readonly ContainerStore $store,
+        private readonly Environment $twig,
     ) {}
 
     /**
@@ -29,7 +32,10 @@ final class HomeHandler
      */
     public function __invoke(ServerRequestInterface $request): PromiseInterface
     {
-        return $this->action->handle()->then(
+        return resolve($this->twig->render('home.twig', [
+            'title' => 'Core Command Panel',
+            'groups' => $this->store->getGroupedLinks(),
+        ]))->then(
             fn (string $html): Response => new Response(
                 200,
                 ['Content-Type' => 'text/html'],

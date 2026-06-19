@@ -14,7 +14,10 @@
   "autoload": {
     "psr-4": {
       "Shipped\\Backend\\": "src/"
-    }
+    },
+    "files": [
+      "src/Domain/label-parser.php"
+    ]
   },
   "config": {
     "optimize-autoloader": true,

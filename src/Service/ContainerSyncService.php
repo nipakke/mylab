@@ -25,9 +25,13 @@ final class ContainerSyncService
 
     private const DEBOUNCE_SECONDS = 0.5;
 
+    private const MAX_WAIT_SECONDS = 2.0;
+
     private bool $refreshing = false;
 
     private ?TimerInterface $debounce = null;
+
+    private ?TimerInterface $maxWait = null;
 
     public function __construct(
         private readonly DockerServiceInterface $docker,
@@ -78,14 +82,36 @@ final class ContainerSyncService
 
     private function scheduleRefresh(): void
     {
+        // Reset debounce — wait for quiet period
         if ($this->debounce !== null) {
             Loop::cancelTimer($this->debounce);
         }
 
-        $this->debounce = Loop::addTimer(self::DEBOUNCE_SECONDS, function (): void {
+        $this->debounce = Loop::addTimer(self::DEBOUNCE_SECONDS, $this->doRefresh(...));
+
+        // Start max-wait on first event of a burst, never reset it
+        if ($this->maxWait === null) {
+            $this->maxWait = Loop::addTimer(self::MAX_WAIT_SECONDS, $this->doRefresh(...));
+        }
+    }
+
+    private function doRefresh(): void
+    {
+        $this->clearTimers();
+        $this->refreshAll();
+    }
+
+    private function clearTimers(): void
+    {
+        if ($this->debounce !== null) {
+            Loop::cancelTimer($this->debounce);
             $this->debounce = null;
-            $this->refreshAll();
-        });
+        }
+
+        if ($this->maxWait !== null) {
+            Loop::cancelTimer($this->maxWait);
+            $this->maxWait = null;
+        }
     }
 
     private function refreshAll(): void

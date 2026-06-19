@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Service;
+namespace MyLab\Service;
 
 use React\Stream\ThroughStream;
 

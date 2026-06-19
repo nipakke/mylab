@@ -1,4 +1,4 @@
-# Dash — Docker Container Dashboard
+# MyLab — Docker Container Dashboard
 
 An asynchronous PHP hypermedia monolith for real-time Docker container monitoring. Built with ReactPHP, Twig, and HTMX — no client-side JavaScript framework required.
 

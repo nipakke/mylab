@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Service;
+namespace MyLab\Service;
 
 use React\Promise;
 use React\Promise\PromiseInterface;
 use React\Stream\ReadableStreamInterface;
 use React\Stream\ThroughStream;
-use Shipped\Backend\Domain\Container;
+use MyLab\Domain\Container;
 
 use function React\Promise\Timer\timeout;
 

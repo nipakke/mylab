@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Handler;
+namespace MyLab\Handler;
 
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Loop;

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Shipped\Backend\Domain\Container;
-use Shipped\Backend\Domain\DashboardLink;
+use MyLab\Domain\Container;
+use MyLab\Domain\DashboardLink;
 
-use function Shipped\Backend\Domain\groupAndSort;
-use function Shipped\Backend\Domain\hasDashLabels;
-use function Shipped\Backend\Domain\parseLabel;
-use function Shipped\Backend\Domain\parseLabels;
+use function MyLab\Domain\groupAndSort;
+use function MyLab\Domain\hasMyLabLabels;
+use function MyLab\Domain\parseLabel;
+use function MyLab\Domain\parseLabels;
 
 /**
  * Helper to create a Container with specific labels.
@@ -28,14 +28,14 @@ function makeContainer(array $labels = [], string $name = 'test-service', string
 
 // ─── parseLabel ──────────────────────────────────────────────────────────
 
-test('container with no dash labels returns null', function () {
+test('container with no mylab labels returns null', function () {
     $link = parseLabel(makeContainer([]));
 
     expect($link)->toBeNull();
 });
 
-test('container with a dash label is enabled by default', function () {
-    $link = parseLabel(makeContainer(['dash.name' => 'My App']));
+test('container with a mylab label is enabled by default', function () {
+    $link = parseLabel(makeContainer(['mylab.name' => 'My App']));
 
     expect($link)->toBeInstanceOf(DashboardLink::class)
         ->and($link->name)->toBe('My App')
@@ -49,32 +49,32 @@ test('container with a dash label is enabled by default', function () {
         ->and($link->containerName)->toBe('test-service');
 });
 
-test('dash.enable=false returns null', function () {
-    $link = parseLabel(makeContainer(['dash.enable' => 'false']));
+test('mylab.enable=false returns null', function () {
+    $link = parseLabel(makeContainer(['mylab.enable' => 'false']));
 
     expect($link)->toBeNull();
 });
 
-test('dash.enable=true is enabled', function () {
-    $link = parseLabel(makeContainer(['dash.enable' => 'true']));
+test('mylab.enable=true is enabled', function () {
+    $link = parseLabel(makeContainer(['mylab.enable' => 'true']));
 
     expect($link)->not->toBeNull();
 });
 
-test('dash.enable with any value other than false is enabled', function () {
-    $link = parseLabel(makeContainer(['dash.enable' => '1']));
+test('mylab.enable with any value other than false is enabled', function () {
+    $link = parseLabel(makeContainer(['mylab.enable' => '1']));
 
     expect($link)->not->toBeNull();
 });
 
 test('parses all optional label values', function () {
     $link = parseLabel(makeContainer([
-        'dash.name' => 'Uptime Kuma',
-        'dash.url' => 'https://status.local',
-        'dash.icon' => 'uptimekuma',
-        'dash.group' => 'Monitoring',
-        'dash.description' => 'Status page for all services',
-        'dash.weight' => '10',
+        'mylab.name' => 'Uptime Kuma',
+        'mylab.url' => 'https://status.local',
+        'mylab.icon' => 'uptimekuma',
+        'mylab.group' => 'Monitoring',
+        'mylab.description' => 'Status page for all services',
+        'mylab.weight' => '10',
     ]));
 
     expect($link->name)->toBe('Uptime Kuma')
@@ -85,17 +85,17 @@ test('parses all optional label values', function () {
         ->and($link->weight)->toBe(10);
 });
 
-test('name falls back to container name when dash.name is empty', function () {
-    $link = parseLabel(makeContainer(['dash.name' => ''], 'nginx-proxy'));
+test('name falls back to container name when mylab.name is empty', function () {
+    $link = parseLabel(makeContainer(['mylab.name' => ''], 'nginx-proxy'));
 
     expect($link->name)->toBe('nginx-proxy');
 });
 
 test('empty url, icon, description become null', function () {
     $link = parseLabel(makeContainer([
-        'dash.url' => '',
-        'dash.icon' => '',
-        'dash.description' => '',
+        'mylab.url' => '',
+        'mylab.icon' => '',
+        'mylab.description' => '',
     ]));
 
     expect($link->url)->toBeNull()
@@ -104,14 +104,14 @@ test('empty url, icon, description become null', function () {
 });
 
 test('empty group falls back to Other', function () {
-    $link = parseLabel(makeContainer(['dash.group' => '']));
+    $link = parseLabel(makeContainer(['mylab.group' => '']));
 
     expect($link->group)->toBe('Other');
 });
 
 test('captures container status correctly', function () {
-    $running = parseLabel(makeContainer(['dash.name' => 'app'], 'app', 'running'));
-    $exited = parseLabel(makeContainer(['dash.name' => 'app'], 'app', 'exited'));
+    $running = parseLabel(makeContainer(['mylab.name' => 'app'], 'app', 'running'));
+    $exited = parseLabel(makeContainer(['mylab.name' => 'app'], 'app', 'exited'));
 
     expect($running->status)->toBe('running')
         ->and($exited->status)->toBe('exited');
@@ -121,9 +121,9 @@ test('captures container status correctly', function () {
 
 test('parseLabels filters disabled containers', function () {
     $containers = [
-        makeContainer(['dash.name' => 'App A']),
-        makeContainer(['dash.enable' => 'false', 'dash.name' => 'App B']),
-        makeContainer(['dash.name' => 'App C']),
+        makeContainer(['mylab.name' => 'App A']),
+        makeContainer(['mylab.enable' => 'false', 'mylab.name' => 'App B']),
+        makeContainer(['mylab.name' => 'App C']),
     ];
 
     $links = parseLabels($containers);
@@ -133,12 +133,12 @@ test('parseLabels filters disabled containers', function () {
         ->and($links[1]->name)->toBe('App C');
 });
 
-test('parseLabels filters out containers with no dash labels', function () {
+test('parseLabels filters out containers with no mylab labels', function () {
     $containers = [
-        makeContainer(['dash.name' => 'App A']),
-        makeContainer([]),                       // no dash labels at all
-        makeContainer(['some.other.label' => 'x']), // non-dash labels
-        makeContainer(['dash.url' => 'https://b.local', 'dash.name' => 'App B']),
+        makeContainer(['mylab.name' => 'App A']),
+        makeContainer([]),                       // no mylab labels at all
+        makeContainer(['some.other.label' => 'x']), // non-mylab labels
+        makeContainer(['mylab.url' => 'https://b.local', 'mylab.name' => 'App B']),
     ];
 
     $links = parseLabels($containers);
@@ -150,8 +150,8 @@ test('parseLabels filters out containers with no dash labels', function () {
 
 test('parseLabels returns empty array when all disabled', function () {
     $containers = [
-        makeContainer(['dash.enable' => 'false']),
-        makeContainer(['dash.enable' => 'false']),
+        makeContainer(['mylab.enable' => 'false']),
+        makeContainer(['mylab.enable' => 'false']),
     ];
 
     $links = parseLabels($containers);
@@ -159,7 +159,7 @@ test('parseLabels returns empty array when all disabled', function () {
     expect($links)->toBeEmpty();
 });
 
-test('parseLabels returns empty array when no containers have dash labels', function () {
+test('parseLabels returns empty array when no containers have mylab labels', function () {
     $containers = [
         makeContainer([]),
         makeContainer(['traefik.enable' => 'true']),
@@ -170,17 +170,17 @@ test('parseLabels returns empty array when no containers have dash labels', func
     expect($links)->toBeEmpty();
 });
 
-// ─── hasDashLabels ───────────────────────────────────────────────────────
+// ─── hasMyLabLabels ──────────────────────────────────────────────────────
 
-test('hasDashLabels returns true when dash labels exist', function () {
-    expect(hasDashLabels(['dash.name' => 'X']))->toBeTrue();
-    expect(hasDashLabels(['other.label' => 'x', 'dash.url' => 'y']))->toBeTrue();
+test('hasMyLabLabels returns true when mylab labels exist', function () {
+    expect(hasMyLabLabels(['mylab.name' => 'X']))->toBeTrue();
+    expect(hasMyLabLabels(['other.label' => 'x', 'mylab.url' => 'y']))->toBeTrue();
 });
 
-test('hasDashLabels returns false when no dash labels', function () {
-    expect(hasDashLabels([]))->toBeFalse();
-    expect(hasDashLabels(['traefik.enable' => 'true']))->toBeFalse();
-    expect(hasDashLabels(['com.docker.compose.project' => 'foo']))->toBeFalse();
+test('hasMyLabLabels returns false when no mylab labels', function () {
+    expect(hasMyLabLabels([]))->toBeFalse();
+    expect(hasMyLabLabels(['traefik.enable' => 'true']))->toBeFalse();
+    expect(hasMyLabLabels(['com.docker.compose.project' => 'foo']))->toBeFalse();
 });
 
 // ─── groupAndSort ────────────────────────────────────────────────────────

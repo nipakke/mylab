@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Domain;
+namespace MyLab\Domain;
 
 enum ContainerState: string
 {

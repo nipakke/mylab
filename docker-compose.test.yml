@@ -2,47 +2,47 @@ services:
   # ── Monitoring group ──────────────────────────────
   uptime:
     image: nginx:alpine
-    container_name: dash-uptime
+    container_name: mylab-uptime
     labels:
-      dash.name: "Uptime Kuma 2"
-      dash.url: "https://status.local"
-      dash.icon: "uptimekuma"
-      dash.group: "Monitoring"
-      dash.description: "Status page for all services"
-      dash.weight: "10"
+      mylab.name: "Uptime Kuma 2"
+      mylab.url: "https://status.local"
+      mylab.icon: "uptimekuma"
+      mylab.group: "Monitoring"
+      mylab.description: "Status page for all services"
+      mylab.weight: "10"
 
   grafana:
     image: nginx:alpine
-    container_name: dash-grafana
+    container_name: mylab-grafana
     labels:
-      dash.name: "Grafana"
-      dash.url: "https://grafana.local"
-      dash.icon: "grafana"
-      dash.group: "Monitoring"
-      dash.description: "Metrics and dashboards"
-      dash.weight: "20"
+      mylab.name: "Grafana"
+      mylab.url: "https://grafana.local"
+      mylab.icon: "grafana"
+      mylab.group: "Monitoring"
+      mylab.description: "Metrics and dashboards"
+      mylab.weight: "20"
 
   # ── Media group ───────────────────────────────────
   plex:
     image: nginx:alpine
-    container_name: dash-plex
+    container_name: mylab-plex
     labels:
-      dash.name: "Plex"
-      dash.url: "https://media.local"
-      dash.icon: "plex"
-      dash.group: "Media"
-      dash.description: "Media streaming server"
-      dash.weight: "10"
+      mylab.name: "Plex"
+      mylab.url: "https://media.local"
+      mylab.icon: "plex"
+      mylab.group: "Media"
+      mylab.description: "Media streaming server"
+      mylab.weight: "10"
 
-  # ── Hidden (no dash labels) ───────────────────────
+  # ── Hidden (no mylab labels) ───────────────────────
   hidden:
     image: nginx:alpine
-    container_name: dash-hidden
+    container_name: mylab-hidden
 
   # ── Disabled explicitly ──────────────────────────
   disabled:
     image: nginx:alpine
-    container_name: dash-disabled
+    container_name: mylab-disabled
     labels:
-      dash.enable: "false"
-      dash.name: "Should not appear"
+      mylab.enable: "false"
+      mylab.name: "Should not appear"

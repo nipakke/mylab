@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Domain;
+namespace MyLab\Domain;
 
 /**
  * Pure functions for extracting DashboardLink config from Docker container labels.
  *
- * A container is only displayed if it has at least one dash.* label
- * and dash.enable is not explicitly "false".
+ * A container is only displayed if it has at least one mylab.* label
+ * and mylab.enable is not explicitly "false".
  * Unlabeled containers are invisible — not shown at all.
  */
 const DEFAULT_GROUP = 'Other';
 const DEFAULT_WEIGHT = 50;
 
 /**
- * Parse all containers, returning only those that are dash-enabled.
+ * Parse all containers, returning only those that are mylab-enabled.
  *
  * @param  Container[]  $containers
  * @return DashboardLink[]
@@ -38,12 +38,12 @@ function parseLabel(Container $container): ?DashboardLink
         return null;
     }
 
-    $name = ! empty($labels['dash.name']) ? $labels['dash.name'] : $container->name;
-    $url = $labels['dash.url'] ?? null;
-    $icon = $labels['dash.icon'] ?? null;
-    $description = $labels['dash.description'] ?? null;
-    $group = $labels['dash.group'] ?? DEFAULT_GROUP;
-    $weight = isset($labels['dash.weight']) ? (int) $labels['dash.weight'] : DEFAULT_WEIGHT;
+    $name = ! empty($labels['mylab.name']) ? $labels['mylab.name'] : $container->name;
+    $url = $labels['mylab.url'] ?? null;
+    $icon = $labels['mylab.icon'] ?? null;
+    $description = $labels['mylab.description'] ?? null;
+    $group = $labels['mylab.group'] ?? DEFAULT_GROUP;
+    $weight = isset($labels['mylab.weight']) ? (int) $labels['mylab.weight'] : DEFAULT_WEIGHT;
 
     return new DashboardLink(
         containerId: $container->id,
@@ -84,28 +84,28 @@ function groupAndSort(array $links): array
 }
 
 /**
- * Skip containers that are either explicitly disabled or have no dash labels at all.
+ * Skip containers that are either explicitly disabled or have no mylab labels at all.
  *
  * @param  array<string, string>  $labels
  */
 function shouldSkip(array $labels): bool
 {
-    if (! hasDashLabels($labels)) {
+    if (! hasMyLabLabels($labels)) {
         return true;
     }
 
-    return isset($labels['dash.enable']) && $labels['dash.enable'] === 'false';
+    return isset($labels['mylab.enable']) && $labels['mylab.enable'] === 'false';
 }
 
 /**
- * Check if the labels array contains any key starting with "dash.".
+ * Check if the labels array contains any key starting with "mylab.".
  *
  * @param  array<string, string>  $labels
  */
-function hasDashLabels(array $labels): bool
+function hasMyLabLabels(array $labels): bool
 {
     foreach ($labels as $key => $_) {
-        if (str_starts_with($key, 'dash.')) {
+        if (str_starts_with($key, 'mylab.')) {
             return true;
         }
     }

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Service;
+namespace MyLab\Service;
 
 use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
-use Shipped\Backend\Domain\Container;
-use Shipped\Backend\Domain\DashboardLink;
+use MyLab\Domain\Container;
+use MyLab\Domain\DashboardLink;
 
 /**
  * Orchestrates container data synchronisation between the Docker daemon

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Shipped\Backend\Domain\Container;
+use MyLab\Domain\Container;
 use Twig\Environment;
 use Twig\Error\RuntimeError;
 use Twig\Loader\FilesystemLoader;

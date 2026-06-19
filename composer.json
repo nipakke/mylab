@@ -1,5 +1,5 @@
 {
-  "name": "shipped/backend",
+  "name": "mylab/backend",
   "description": "Asynchronous PHP Hypermedia Monolith Core",
   "type": "project",
   "license": "MIT",
@@ -14,7 +14,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Shipped\\Backend\\": ""
+      "MyLab\\": ""
     },
     "files": [
       "Domain/label-parser.php"

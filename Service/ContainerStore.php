@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Service;
+namespace MyLab\Service;
 
-use Shipped\Backend\Domain\Container;
-use Shipped\Backend\Domain\DashboardLink;
+use MyLab\Domain\Container;
+use MyLab\Domain\DashboardLink;
 
-use function Shipped\Backend\Domain\groupAndSort;
-use function Shipped\Backend\Domain\parseLabels;
+use function MyLab\Domain\groupAndSort;
+use function MyLab\Domain\parseLabels;
 
 /**
  * In-memory store holding the latest container list and pre-parsed link cache.

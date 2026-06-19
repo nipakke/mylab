@@ -1,0 +1,15 @@
+# .github/release.yml
+changelog:
+  categories:
+    - title: "🚀 Features"
+      labels:
+        - enhancement
+        - feature
+    - title: "🐛 Fixes"
+      labels:
+        - bug
+        - fix
+  exclude:
+    - labels:
+        - chore
+        - ignore

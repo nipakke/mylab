@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Service;
+namespace MyLab\Service;
 
-use Shipped\Backend\Domain\Container;
-use Shipped\Backend\Domain\DashboardLink;
+use MyLab\Domain\Container;
+use MyLab\Domain\DashboardLink;
 
 interface ContainerStoreInterface
 {

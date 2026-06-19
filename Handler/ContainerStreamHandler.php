@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Handler;
+namespace MyLab\Handler;
 
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Loop;
 use React\Http\Message\Response;
 use React\Promise\PromiseInterface;
 use React\Stream\ThroughStream;
-use Shipped\Backend\Service\SseBroadcaster;
+use MyLab\Service\SseBroadcaster;
 use Twig\Environment;
 
 use function React\Promise\resolve;

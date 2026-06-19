@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Service;
+namespace MyLab\Service;
 
 use React\Promise\PromiseInterface;
 use React\Stream\ReadableStreamInterface;
-use Shipped\Backend\Domain\Container;
+use MyLab\Domain\Container;
 
 interface DockerServiceInterface
 {

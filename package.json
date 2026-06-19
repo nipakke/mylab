@@ -1,5 +1,5 @@
 {
-  "name": "dash",
+  "name": "mylab",
   "private": true,
   "scripts": {
     "dev": "nodemon --config nodemon.json",

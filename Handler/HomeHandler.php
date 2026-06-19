@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Handler;
+namespace MyLab\Handler;
 
 use Psr\Http\Message\ServerRequestInterface;
 use React\Http\Message\Response;
 use React\Promise\PromiseInterface;
-use Shipped\Backend\Service\ContainerStoreInterface;
+use MyLab\Service\ContainerStoreInterface;
 use Twig\Environment;
 
 use function React\Promise\resolve;
@@ -33,7 +33,7 @@ final class HomeHandler
     public function __invoke(ServerRequestInterface $request): PromiseInterface
     {
         return resolve($this->twig->render('home.twig', [
-            'title' => 'Core Command Panel',
+            'title' => 'MyLab',
             'groups' => $this->store->getGroupedLinks(0.0),
         ]))->then(
             fn (string $html): Response => new Response(

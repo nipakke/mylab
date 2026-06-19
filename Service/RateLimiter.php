@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Service;
+namespace MyLab\Service;
 
 /**
  * In-memory token-bucket rate limiter — fits ReactPHP's single-process model.

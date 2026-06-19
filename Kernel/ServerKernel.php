@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shipped\Backend\Kernel;
+namespace MyLab\Kernel;
 
 use FastRoute;
 use Psr\Http\Message\ServerRequestInterface;
@@ -10,17 +10,17 @@ use React\EventLoop\Loop;
 use React\Http\HttpServer;
 use React\Http\Message\Response;
 use React\Socket\SocketServer;
-use Shipped\Backend\Handler\ContainerStreamHandler;
-use Shipped\Backend\Handler\DevReloadHandler;
-use Shipped\Backend\Handler\HomeHandler;
-use Shipped\Backend\Service\ContainerStore;
-use Shipped\Backend\Service\ContainerSyncService;
-use Shipped\Backend\Service\DockerService;
-use Shipped\Backend\Service\DockerServiceInterface;
-use Shipped\Backend\Service\IpResolver;
-use Shipped\Backend\Service\MultiDockerService;
-use Shipped\Backend\Service\RateLimiter;
-use Shipped\Backend\Service\SseBroadcaster;
+use MyLab\Handler\ContainerStreamHandler;
+use MyLab\Handler\DevReloadHandler;
+use MyLab\Handler\HomeHandler;
+use MyLab\Service\ContainerStore;
+use MyLab\Service\ContainerSyncService;
+use MyLab\Service\DockerService;
+use MyLab\Service\DockerServiceInterface;
+use MyLab\Service\IpResolver;
+use MyLab\Service\MultiDockerService;
+use MyLab\Service\RateLimiter;
+use MyLab\Service\SseBroadcaster;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
@@ -68,8 +68,8 @@ final class ServerKernel
         ]);
         $this->twig->addGlobal('is_dev', $this->isDev);
 
-        // Priority: DASH_DOCKER_HOSTS > DOCKER_HOST > default
-        $hosts = getenv('DASH_DOCKER_HOSTS');
+        // Priority: MYLAB_DOCKER_HOSTS > DOCKER_HOST > default
+        $hosts = getenv('MYLAB_DOCKER_HOSTS');
         if ($hosts !== false && $hosts !== '') {
             $dsns = array_values(array_filter(array_map('trim', explode(',', $hosts)), fn (string $s): bool => $s !== ''));
             if (count($dsns) === 1) {

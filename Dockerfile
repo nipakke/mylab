@@ -15,10 +15,9 @@ RUN npm install htmx.org@2.0.10 --no-save && \
 # =========================================================================
 # STAGE 2: PRODUCTION RUNTIME (PHP 8.3 CLI Alpine)
 # =========================================================================
-FROM php:8.3-cli-alpine
+FROM php:8.5-cli-alpine
 
-# Enable OPcache for production performance
-RUN docker-php-ext-install opcache
+# OPcache is built-in to PHP CLI images — enabled via docker/php.ini
 
 COPY --from=css /app/public/assets/css /app/public/assets/css
 COPY --from=css /app/public/assets/js  /app/public/assets/js
@@ -34,6 +33,9 @@ COPY . /app
 
 # Production PHP config: OPcache + JIT optimizations
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-performance.ini
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
 # Production dependencies (no dev tools)
 RUN composer install --no-dev --optimize-autoloader

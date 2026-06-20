@@ -1,0 +1,76 @@
+# =============================================================================
+# MyLab local development compose file
+# =============================================================================
+# Spins up the MyLab dashboard + sample containers so you can test the full
+# label-discovery flow without any external Docker hosts.
+#
+# Usage:
+#   docker compose up --build -d     Build and start everything
+#   docker compose logs -f mylab     Watch app logs
+#   docker compose down              Stop and remove everything
+#
+# Dashboard: http://localhost:8080
+# =============================================================================
+
+services:
+  # ── MyLab Dashboard ──────────────────────────────────────────────────
+  mylab:
+    build: .
+    container_name: mylab-dashboard
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    ports:
+      - "8080:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
+  # ── Sample containers (from docker-compose.test.yml) ─────────────────
+
+  # ── Monitoring group ─────────────────────────────────────────────────
+  uptime:
+    image: nginx:alpine
+    container_name: mylab-uptime
+    labels:
+      mylab.name: "Uptime Kuma 2"
+      mylab.url: "https://status.local"
+      mylab.icon: "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/uptime-kuma.webp"
+      mylab.group: "Monitoring"
+      mylab.description: "Status page for all services"
+      mylab.weight: "10"
+
+  grafana:
+    image: nginx:alpine
+    container_name: mylab-grafana
+    labels:
+      mylab.name: "Grafana"
+      mylab.url: "https://grafana.local"
+      mylab.icon: "grafana"
+      mylab.group: "Monitoring"
+      mylab.description: "Metrics and dashboards"
+      mylab.weight: "20"
+
+  # ── Media group ──────────────────────────────────────────────────────
+  plex:
+    image: nginx:alpine
+    container_name: mylab-plex
+    labels:
+      mylab.name: "Plex"
+      mylab.url: "https://media.local"
+      mylab.icon: "plex"
+      mylab.group: "Media"
+      mylab.description: "Media streaming server"
+      mylab.weight: "10"
+
+  # ── Hidden (no mylab labels) ─────────────────────────────────────────
+  hidden:
+    image: nginx:alpine
+    container_name: mylab-hidden
+
+  # ── Disabled explicitly ──────────────────────────────────────────────
+  disabled:
+    image: nginx:alpine
+    container_name: mylab-disabled
+    labels:
+      mylab.enable: "false"
+      mylab.name: "Should not appear"

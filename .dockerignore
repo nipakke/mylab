@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build artifacts
+public/assets/css/app.min.css
+public/assets/js/htmx.js
+
+# Cache
+cache/
+
+# Tests
+tests/
+.phpunit.cache
+.phpunit.result.cache
+
+# CI
+.github/
+
+# Documentation
+docs/
+
+# Environment
+.env
+.env.local
+
+# Development
+.tmp/
+.opencode/
+.agents/
+
+# Git
+.git/
+.gitignore
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

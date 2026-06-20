@@ -1,11 +1,10 @@
 name: Handle Version Bump & Release
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'package.json'
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
 
 env:
   REGISTRY: docker.io
@@ -13,41 +12,55 @@ env:
 
 jobs:
   tag-and-release:
+    # Only run when CI passed on a push to main (not on PR CI completions)
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
 
-      - name: Extract Version from package.json
-        id: get_version
+      - name: Check if version was bumped
+        id: version_check
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          TAG="v$VERSION"
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists — version was not bumped. Skipping release."
+            echo "BUMPED=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version bumped to $VERSION — proceeding with release."
+            echo "BUMPED=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Create and Push Tag
+        if: steps.version_check.outputs.BUMPED == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          TAG="v${{ steps.get_version.outputs.VERSION }}"
-
-          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
-            git tag $TAG
-            git push origin $TAG
-          else
-            echo "Tag $TAG already exists. Skipping tag creation."
-          fi
+          git tag "${{ steps.version_check.outputs.TAG }}"
+          git push origin "${{ steps.version_check.outputs.TAG }}"
 
       - name: Create GitHub Release
+        if: steps.version_check.outputs.BUMPED == 'true'
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: v${{ steps.get_version.outputs.VERSION }}
-          name: Release v${{ steps.get_version.outputs.VERSION }}
+          tag_name: ${{ steps.version_check.outputs.TAG }}
+          name: Release ${{ steps.version_check.outputs.TAG }}
           generate_release_notes: true
 
       - name: Log in to the Container registry
+        if: steps.version_check.outputs.BUMPED == 'true'
         uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
@@ -55,15 +68,17 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Extract Docker metadata
+        if: steps.version_check.outputs.BUMPED == 'true'
         id: meta
         uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}},value=v${{ steps.get_version.outputs.VERSION }}
+            type=semver,pattern={{version}},value=${{ steps.version_check.outputs.TAG }}
             type=raw,value=latest
 
       - name: Build and push Docker image
+        if: steps.version_check.outputs.BUMPED == 'true'
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -71,4 +86,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            APP_VERSION=v${{ steps.get_version.outputs.VERSION }}
+            APP_VERSION=${{ steps.version_check.outputs.TAG }}

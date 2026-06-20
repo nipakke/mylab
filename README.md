@@ -11,7 +11,7 @@ A self-updating link page that reads Docker container labels and renders them as
 Pull the image from Docker Hub:
 
 ```bash
-docker pull username/mylab        # replace with the actual image name
+docker pull nipakke/mylab
 ```
 
 ### Run with Docker
@@ -21,7 +21,7 @@ docker run -d \
   --name mylab \
   -p 8080:80 \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  username/mylab
+  nipakke/mylab
 ```
 
 Visit **`http://localhost:8080`**.
@@ -32,7 +32,7 @@ Visit **`http://localhost:8080`**.
 # compose.yml
 services:
   mylab:
-    image: username/mylab
+    image: nipakke/mylab
     container_name: mylab
     ports:
       - "8080:80"
@@ -69,7 +69,7 @@ services:
     restart: unless-stopped
 
   mylab:
-    image: username/mylab
+    image: nipakke/mylab
     container_name: mylab
     ports:
       - "8080:80"
@@ -162,7 +162,7 @@ docker run -d \
   -p 80:80 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -e MYLAB_DOCKER_HOSTS="unix:///var/run/docker.sock,tcp://10.0.0.5:2375,tcp://10.0.0.6:2375" \
-  username/mylab
+  nipakke/mylab
 ```
 
 If exactly one DSN is provided, the single `DockerService` is used. Two or more switches to `MultiDockerService`.
@@ -183,13 +183,13 @@ Controls how the real client IP is determined behind a reverse proxy. Important 
 
 ```bash
 # Behind Traefik or nginx on the same Docker network
-docker run ... -e TRUST_PROXY=auto username/mylab
+docker run ... -e TRUST_PROXY=auto nipakke/mylab
 
 # Behind Cloudflare
-docker run ... -e TRUST_PROXY=cloudflare username/mylab
+docker run ... -e TRUST_PROXY=cloudflare nipakke/mylab
 
 # Directly exposed (no reverse proxy)
-docker run ... -e TRUST_PROXY=0 username/mylab
+docker run ... -e TRUST_PROXY=0 nipakke/mylab
 ```
 
 ### Rate limiting

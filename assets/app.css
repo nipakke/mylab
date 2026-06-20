@@ -3,3 +3,4 @@
   themes: dracula --default;
 }
 @source "../views/**/*.twig";
+@source inline("bg-success bg-error bg-warning bg-info bg-neutral");

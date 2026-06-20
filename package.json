@@ -1,17 +1,20 @@
 {
   "name": "mylab",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "nodemon --config nodemon.json",
     "test": "vendor/bin/pest",
     "postinstall": "composer install",
     "build:css": "npx @tailwindcss/cli -i assets/app.css -o public/assets/css/app.min.css --minify",
-    "watch:css": "npx @tailwindcss/cli -i assets/app.css -o public/assets/css/app.min.css --watch"
+    "watch:css": "npx @tailwindcss/cli -i assets/app.css -o public/assets/css/app.min.css --watch",
+    "bump": "bumpp --commit --no-tag"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0",
-    "tailwindcss": "latest",
     "@tailwindcss/cli": "latest",
-    "daisyui": "latest"
+    "bumpp": "^11.1.0",
+    "daisyui": "latest",
+    "nodemon": "^3.1.0",
+    "tailwindcss": "latest"
   }
 }

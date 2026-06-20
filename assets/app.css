@@ -1,5 +1,5 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: dark --default;
+  themes: dracula --default;
 }
 @source "../views/**/*.twig";

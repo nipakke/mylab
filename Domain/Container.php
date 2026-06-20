@@ -87,6 +87,25 @@ final readonly class Container
     {
         return $this->labels[$key] ?? null;
     }
+
+    /**
+     * Return a new Container with the given labels, keeping all other properties.
+     *
+     * Immutable — the original Container is unchanged.
+     *
+     * @param  array<string, string>  $labels
+     */
+    public function withLabels(array $labels): self
+    {
+        return new self(
+            id: $this->id,
+            name: $this->name,
+            status: $this->status,
+            memoryUsageBytes: $this->memoryUsageBytes,
+            labels: $labels,
+            dockerStatus: $this->dockerStatus,
+        );
+    }
 }
 
 /**

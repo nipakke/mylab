@@ -72,6 +72,35 @@ final class MultiDockerService implements DockerServiceInterface
     }
 
     /**
+     * List services from every backend, merge, and deduplicate.
+     *
+     * Each service is called independently with a 2-second deadline.
+     * Failures (including timeouts) are caught per-service and logged
+     * to STDERR; the failed service simply contributes an empty array.
+     *
+     * @return PromiseInterface<list<array{ID?: string, Spec?: array{Labels?: array<string, string>}}>>
+     */
+    public function listServices(): PromiseInterface
+    {
+        $promises = [];
+
+        foreach ($this->services as $service) {
+            $promises[] = timeout($service->listServices(), 2.0)->then(
+                static fn (array $services): array => $services,
+                static function (\Throwable $e): array {
+                    fwrite(STDERR, "[MultiDockerService] listServices failed: {$e->getMessage()}\n");
+
+                    return [];
+                },
+            );
+        }
+
+        return Promise\all($promises)->then(
+            fn (array $results): array => $this->deduplicateServices(array_merge(...$results)),
+        );
+    }
+
+    /**
      * Merge event streams from every backend into a single ThroughStream.
      *
      * Data events are forwarded transparently. Error events are logged to
@@ -126,6 +155,26 @@ final class MultiDockerService implements DockerServiceInterface
         foreach ($containers as $container) {
             if (! isset($seen[$container->id])) {
                 $seen[$container->id] = $container;
+            }
+        }
+
+        return array_values($seen);
+    }
+
+    /**
+     * Deduplicate service arrays by ID, keeping the first occurrence.
+     *
+     * @param  array<array-key, array{ID?: string, Spec?: array{Labels?: array<string, string>}}>  $services
+     * @return list<array{ID?: string, Spec?: array{Labels?: array<string, string>}}>
+     */
+    private function deduplicateServices(array $services): array
+    {
+        $seen = [];
+
+        foreach ($services as $service) {
+            $id = $service['ID'] ?? null;
+            if ($id !== null && ! isset($seen[$id])) {
+                $seen[$id] = $service;
             }
         }
 

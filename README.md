@@ -113,7 +113,29 @@ services:
 
 ### Icons
 
-Pass the icon name as the value of `mylab.icon`. Common examples: `grafana`, `uptimekuma`, `plex`, `portainer`, `traefik`, `homeassistant`.
+`mylab.icon` accepts either a **URL** to an image or a plain text label (which renders as the first two characters).
+
+**Recommended icon source**: [selfh.st/icons](https://selfh.st/icons/) — a curated collection of self-hosted service icons in SVG, PNG, and WebP. Use the jsDelivr CDN:
+
+```yaml
+labels:
+  mylab.icon: "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/1panel.webp"
+```
+
+Other popular icon URLs from the collection:
+
+| Service | Icon URL |
+|---|---|
+| Grafana | `https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/grafana.webp` |
+| Plex | `https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/plex.webp` |
+| Portainer | `https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/portainer.webp` |
+| Traefik | `https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/traefik.webp` |
+| Home Assistant | `https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/homeassistant.webp` |
+| AdGuard | `https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/adguard.webp` |
+| Nginx | `https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/nginx.webp` |
+| Uptime Kuma | `https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/uptimekuma.webp` |
+
+Any image URL works — PNG, SVG, WebP, JPG, or even a self-hosted custom icon. If the value is not a URL (e.g. `grafana`), it falls back to the first two characters as text.
 
 ---
 

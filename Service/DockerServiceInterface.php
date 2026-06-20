@@ -18,6 +18,16 @@ interface DockerServiceInterface
     public function listAll(): PromiseInterface;
 
     /**
+     * List all Docker Swarm services via the Docker Engine API.
+     *
+     * Calls GET /services and returns the raw response arrays.  In standalone
+     * (non-Swarm) mode this returns an empty list without erroring.
+     *
+     * @return PromiseInterface<list<array{ID?: string, Spec?: array{Labels?: array<string, string>}}>>
+     */
+    public function listServices(): PromiseInterface;
+
+    /**
      * Stream Docker daemon events as a ReactPHP readable stream.
      *
      * Each `data` event emits a JSON-encoded Docker event object.

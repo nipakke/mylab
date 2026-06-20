@@ -112,3 +112,95 @@ function hasMyLabLabels(array $labels): bool
 
     return false;
 }
+
+/**
+ * Enrich containers with service-level labels from Docker Swarm services.
+ *
+ * In Swarm mode, `deploy.labels` are set on the service object, not on
+ * individual containers.  This function merges those service labels into
+ * matching containers (matched via the `com.docker.swarm.service.id`
+ * label) so the existing parseLabels() pipeline picks them up unchanged.
+ *
+ * Container-level labels take priority over service-level labels when both
+ * define the same key.
+ *
+ * For services that carry `mylab.*` labels, only one container per service
+ * is kept (preferring running containers) to avoid duplicate cards from
+ * multi-replica services.  Containers belonging to services without
+ * `mylab.*` labels are passed through as-is.
+ *
+ * Pure function — no side effects, no I/O.
+ *
+ * @param  Container[]  $containers
+ * @param  list<array{ID?: string, Spec?: array{Labels?: array<string, string>}}>  $services  Raw /services API response
+ * @return Container[]
+ */
+function enrichContainerLabelsWithServiceLabels(array $containers, array $services): array
+{
+    // ── Build service-id → labels map ──────────────────────────────
+    $serviceLabels = [];
+    $servicesWithMyLab = [];
+
+    foreach ($services as $service) {
+        $id = $service['ID'] ?? null;
+        $labels = $service['Spec']['Labels'] ?? [];
+
+        if ($id === null || $labels === []) {
+            continue;
+        }
+
+        $serviceLabels[$id] = $labels;
+
+        if (hasMyLabLabels($labels)) {
+            $servicesWithMyLab[$id] = true;
+        }
+    }
+
+    // Fast path — no swarm services with labels at all
+    if ($serviceLabels === []) {
+        return $containers;
+    }
+
+    // ── Enrich and deduplicate in a single pass ────────────────────
+    $bestPerService = [];
+    $result = [];
+
+    foreach ($containers as $container) {
+        $swarmServiceId = $container->labels['com.docker.swarm.service.id'] ?? null;
+
+        // Not a swarm container, or service has no labels — pass through
+        if ($swarmServiceId === null || ! isset($serviceLabels[$swarmServiceId])) {
+            $result[] = $container;
+            continue;
+        }
+
+        // Merge service labels under container labels
+        $merged = array_merge($serviceLabels[$swarmServiceId], $container->labels);
+        $container = $merged !== $container->labels
+            ? $container->withLabels($merged)
+            : $container;
+
+        // Service without mylab labels — keep every container
+        if (! isset($servicesWithMyLab[$swarmServiceId])) {
+            $result[] = $container;
+            continue;
+        }
+
+        // Service HAS mylab labels — deduplicate, keep best (prefer running)
+        if (! isset($bestPerService[$swarmServiceId])) {
+            $bestPerService[$swarmServiceId] = $container;
+        } elseif (
+            $container->status === 'running'
+            && $bestPerService[$swarmServiceId]->status !== 'running'
+        ) {
+            $bestPerService[$swarmServiceId] = $container;
+        }
+    }
+
+    // Append the best container for each deduplicated service
+    foreach ($bestPerService as $container) {
+        $result[] = $container;
+    }
+
+    return $result;
+}

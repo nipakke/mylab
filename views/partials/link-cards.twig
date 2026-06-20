@@ -21,9 +21,13 @@
                 <div class="card-body p-5">
                     <div class="flex items-start gap-3">
                         {% if l.icon %}
-                        <div class="w-10 h-10 rounded-lg bg-base-300 flex items-center justify-center flex-shrink-0">
-                            <span class="text-primary text-lg font-bold">{{ l.icon|slice(0, 2) }}</span>
-                        </div>
+                            {% if l.icon starts with 'https://' or l.icon starts with 'http://' %}
+                            <img src="{{ l.icon }}" alt="{{ l.name }} icon" class="w-10 h-10 rounded-lg object-contain flex-shrink-0" loading="lazy" />
+                            {% else %}
+                            <div class="w-10 h-10 rounded-lg bg-base-300 flex items-center justify-center flex-shrink-0">
+                                <span class="text-primary text-lg font-bold">{{ l.icon|slice(0, 2) }}</span>
+                            </div>
+                            {% endif %}
                         {% endif %}
                         <div class="min-w-0 flex-1">
                             <h3 class="card-title text-base font-semibold truncate">{{ l.name }}</h3>

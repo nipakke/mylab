@@ -6,7 +6,7 @@ services:
     labels:
       mylab.name: "Uptime Kuma 2"
       mylab.url: "https://status.local"
-      mylab.icon: "uptimekuma"
+      mylab.icon: "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/uptimekuma.webp"
       mylab.group: "Monitoring"
       mylab.description: "Status page for all services"
       mylab.weight: "10"

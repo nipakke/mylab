@@ -6,8 +6,11 @@ namespace MyLab\Service;
 
 use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
+use React\Promise;
 use MyLab\Domain\Container;
 use MyLab\Domain\DashboardLink;
+
+use function MyLab\Domain\enrichContainerLabelsWithServiceLabels;
 
 /**
  * Orchestrates container data synchronisation between the Docker daemon
@@ -109,8 +112,18 @@ final class ContainerSyncService
 
         $this->refreshing = true;
 
-        $this->docker->listAll()->then(
-            $this->applyContainerList(...),
+        Promise\all([
+            $this->docker->listAll(),
+            $this->docker->listServices(),
+        ])->then(
+            function (array $results): void {
+                /** @var Container[] $containers */
+                $containers = $results[0];
+                /** @var list<array{ID?: string, Spec?: array{Labels?: array<string, string>}}> $services */
+                $services = $results[1];
+                $enriched = enrichContainerLabelsWithServiceLabels($containers, $services);
+                $this->applyContainerList($enriched);
+            },
             $this->logError('Periodic refresh'),
         )->then(
             $this->finishRefresh(...),

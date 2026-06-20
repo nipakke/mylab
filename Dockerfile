@@ -8,6 +8,9 @@ RUN npm install --ignore-scripts
 COPY assets/ assets/
 COPY views/ views/
 RUN npm run build:css
+RUN npm install htmx.org@2.0.10 --no-save && \
+    mkdir -p public/assets/js && \
+    cp node_modules/htmx.org/dist/htmx.js public/assets/js/htmx.js
 
 # =========================================================================
 # STAGE 2: PRODUCTION RUNTIME (PHP 8.3 CLI Alpine)
@@ -18,6 +21,7 @@ FROM php:8.3-cli-alpine
 RUN docker-php-ext-install opcache
 
 COPY --from=css /app/public/assets/css /app/public/assets/css
+COPY --from=css /app/public/assets/js  /app/public/assets/js
 
 # Runtime configuration
 ENV APP_ENV=production \

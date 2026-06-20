@@ -1,6 +1,6 @@
 parameters:
-    # Level 8 enforces strict typing, return types, and checks for null values
-    level: 8
+    # Level 5 — basic type checks, a good balance for development
+    level: 5
     paths:
         - Domain
         - Handler

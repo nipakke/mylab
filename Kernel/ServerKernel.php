@@ -5,11 +5,6 @@ declare(strict_types=1);
 namespace MyLab\Kernel;
 
 use FastRoute;
-use Psr\Http\Message\ServerRequestInterface;
-use React\EventLoop\Loop;
-use React\Http\HttpServer;
-use React\Http\Message\Response;
-use React\Socket\SocketServer;
 use MyLab\Handler\ContainerStreamHandler;
 use MyLab\Handler\DevReloadHandler;
 use MyLab\Handler\HomeHandler;
@@ -21,6 +16,10 @@ use MyLab\Service\IpResolver;
 use MyLab\Service\MultiDockerService;
 use MyLab\Service\RateLimiter;
 use MyLab\Service\SseBroadcaster;
+use Psr\Http\Message\ServerRequestInterface;
+use React\Http\HttpServer;
+use React\Http\Message\Response;
+use React\Socket\SocketServer;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
@@ -38,22 +37,23 @@ final class ServerKernel
 
     private readonly string $publicDir;
 
+    /** @var array<string, string> */
     private static array $mimeTypes = [
-        'css'   => 'text/css',
-        'js'    => 'application/javascript',
-        'json'  => 'application/json',
-        'png'   => 'image/png',
-        'jpg'   => 'image/jpeg',
-        'jpeg'  => 'image/jpeg',
-        'gif'   => 'image/gif',
-        'svg'   => 'image/svg+xml',
-        'ico'   => 'image/x-icon',
-        'woff'  => 'font/woff',
+        'css' => 'text/css',
+        'js' => 'application/javascript',
+        'json' => 'application/json',
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif' => 'image/gif',
+        'svg' => 'image/svg+xml',
+        'ico' => 'image/x-icon',
+        'woff' => 'font/woff',
         'woff2' => 'font/woff2',
-        'ttf'   => 'font/ttf',
-        'html'  => 'text/html',
-        'txt'   => 'text/plain',
-        'xml'   => 'application/xml',
+        'ttf' => 'font/ttf',
+        'html' => 'text/html',
+        'txt' => 'text/plain',
+        'xml' => 'application/xml',
     ];
 
     public function __construct()
@@ -111,19 +111,23 @@ final class ServerKernel
         }
 
         $realPublic = realpath($this->publicDir);
-        if ($realPublic === false || !str_starts_with($realFile, $realPublic)) {
+        if ($realPublic === false || ! str_starts_with($realFile, $realPublic)) {
             return null;
         }
 
-        if (!is_file($realFile) || !is_readable($realFile)) {
+        if (! is_file($realFile) || ! is_readable($realFile)) {
             return null;
         }
 
         $content = file_get_contents($realFile);
+        if ($content === false) {
+            return null;
+        }
+
         $mime = $this->resolveMime($realFile);
 
         $headers = [
-            'Content-Type'   => $mime,
+            'Content-Type' => $mime,
             'Content-Length' => (string) strlen($content),
         ];
 
@@ -169,7 +173,7 @@ final class ServerKernel
 
                 return new Response(429, [
                     'Content-Type' => 'text/plain',
-                    'Retry-After'  => (string) $retryAfter,
+                    'Retry-After' => (string) $retryAfter,
                 ], 'Too Many Requests');
             }
 

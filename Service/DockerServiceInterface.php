@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace MyLab\Service;
 
+use MyLab\Domain\Container;
 use React\Promise\PromiseInterface;
 use React\Stream\ReadableStreamInterface;
-use MyLab\Domain\Container;
 
 interface DockerServiceInterface
 {

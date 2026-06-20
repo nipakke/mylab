@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace MyLab\Service;
 
+use MyLab\Domain\Container;
+use MyLab\Domain\DashboardLink;
 use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
 use React\Promise;
-use MyLab\Domain\Container;
-use MyLab\Domain\DashboardLink;
 
 use function MyLab\Domain\enrichContainerLabelsWithServiceLabels;
 

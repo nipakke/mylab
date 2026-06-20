@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace MyLab\Service;
 
 use Clue\React\Docker\Client;
+use MyLab\Domain\Container;
+use Psr\Http\Message\ResponseInterface;
 use React\Http\Browser;
 use React\Promise\PromiseInterface;
 use React\Socket\FixedUriConnector;
 use React\Socket\UnixConnector;
 use React\Stream\ReadableStreamInterface;
-use MyLab\Domain\Container;
 
 final class DockerService implements DockerServiceInterface
 {
@@ -60,7 +61,7 @@ final class DockerService implements DockerServiceInterface
             'services',
             ['Accept' => 'application/json'],
         )->then(
-            static function (\Psr\Http\Message\ResponseInterface $response): array {
+            static function (ResponseInterface $response): array {
                 $body = (string) $response->getBody();
                 $data = json_decode($body, true);
 

@@ -171,6 +171,7 @@ function enrichContainerLabelsWithServiceLabels(array $containers, array $servic
         // Not a swarm container, or service has no labels — pass through
         if ($swarmServiceId === null || ! isset($serviceLabels[$swarmServiceId])) {
             $result[] = $container;
+
             continue;
         }
 
@@ -183,6 +184,7 @@ function enrichContainerLabelsWithServiceLabels(array $containers, array $servic
         // Service without mylab labels — keep every container
         if (! isset($servicesWithMyLab[$swarmServiceId])) {
             $result[] = $container;
+
             continue;
         }
 

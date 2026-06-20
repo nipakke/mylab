@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace MyLab\Handler;
 
+use MyLab\Service\ContainerStoreInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use React\Http\Message\Response;
 use React\Promise\PromiseInterface;
-use MyLab\Service\ContainerStoreInterface;
 use Twig\Environment;
 
 use function React\Promise\resolve;

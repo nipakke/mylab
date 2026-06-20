@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace MyLab\Handler;
 
+use MyLab\Service\SseBroadcaster;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Loop;
 use React\Http\Message\Response;
 use React\Promise\PromiseInterface;
 use React\Stream\ThroughStream;
-use MyLab\Service\SseBroadcaster;
 use Twig\Environment;
 
 use function React\Promise\resolve;

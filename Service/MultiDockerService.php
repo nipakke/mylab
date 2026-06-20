@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace MyLab\Service;
 
+use MyLab\Domain\Container;
 use React\Promise;
 use React\Promise\PromiseInterface;
 use React\Stream\ReadableStreamInterface;
 use React\Stream\ThroughStream;
-use MyLab\Domain\Container;
 
 use function React\Promise\Timer\timeout;
 

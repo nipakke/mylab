@@ -24,7 +24,6 @@ function makeSwarmContainer(
         id: substr(md5($name), 0, 12),
         name: $name,
         status: $status,
-        memoryUsageBytes: 1048576,
         labels: $labels,
     );
 }
@@ -38,7 +37,6 @@ function makeStandaloneContainer(string $name = 'standalone', array $labels = []
         id: substr(md5($name), 0, 12),
         name: $name,
         status: 'running',
-        memoryUsageBytes: 1048576,
         labels: $labels,
     );
 }
@@ -250,7 +248,6 @@ test('immutability: original containers are not modified', function () {
             id: 'abc123',
             name: 'app',
             status: 'running',
-            memoryUsageBytes: 1048576,
             labels: $originalLabels,
         ),
     ];

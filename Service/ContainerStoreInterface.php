@@ -50,12 +50,9 @@ interface ContainerStoreInterface
     public function getLinks(): array;
 
     /**
-     * Return dashboard links grouped by group name, filtered by memory threshold.
-     *
-     * Only links whose associated container uses at least $memoryThreshold
-     * megabytes of memory are included. Pass 0.0 to include all links.
+     * Return dashboard links grouped by group name.
      *
      * @return array<string, DashboardLink[]>
      */
-    public function getGroupedLinks(float $memoryThreshold): array;
+    public function getGroupedLinks(): array;
 }

@@ -13,7 +13,6 @@ final readonly class Container
         public string $id,
         public string $name,
         public string $status,
-        public int $memoryUsageBytes,
         public array $labels = [],
         public string $dockerStatus = '',
     ) {}
@@ -41,7 +40,6 @@ final readonly class Container
             id: substr($data['Id'], 0, 12),
             name: $name,
             status: $state,
-            memoryUsageBytes: $data['SizeRw'] ?? 0,
             labels: $labels,
             dockerStatus: $dockerStatus,
         );
@@ -53,7 +51,7 @@ final readonly class Container
      * Keeps Twig templates free of object method calls — all data is
      * pre-formatted and ready for safe HTML output.
      *
-     * @return array{id: string, name: string, status: string, badgeClass: string, statusClass: string, memory: string}
+     * @return array{id: string, name: string, status: string, badgeClass: string, statusClass: string}
      */
     public function toArray(): array
     {
@@ -65,19 +63,7 @@ final readonly class Container
             'status' => $this->status,
             'badgeClass' => $state?->badgeClass() ?? 'badge-ghost',
             'statusClass' => ContainerState::resolveDotClass($this->status, $this->dockerStatus),
-            'memory' => format_memory_bytes($this->memoryUsageBytes),
         ];
-    }
-
-    /**
-     * Format memory usage as a human-readable string for Twig templates.
-     *
-     * Delegates to the pure function format_memory_bytes() so the formatting
-     * logic is shareable and independently testable.
-     */
-    public function getFormattedMemory(): string
-    {
-        return format_memory_bytes($this->memoryUsageBytes);
     }
 
     /**
@@ -101,22 +87,9 @@ final readonly class Container
             id: $this->id,
             name: $this->name,
             status: $this->status,
-            memoryUsageBytes: $this->memoryUsageBytes,
             labels: $labels,
             dockerStatus: $this->dockerStatus,
         );
     }
 }
 
-/**
- * Format a byte count into a human-readable memory string.
- *
- * Pure function — no side effects, no I/O, trivially testable.
- *
- * @param  int  $bytes  Raw byte count (e.g. 104857600)
- * @return string Human-readable string (e.g. "100 MB")
- */
-function format_memory_bytes(int $bytes): string
-{
-    return round($bytes / 1024 / 1024, 2).' MB';
-}

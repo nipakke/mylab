@@ -34,7 +34,7 @@ final class HomeHandler
     {
         return resolve($this->twig->render('home.twig', [
             'title' => 'MyLab',
-            'groups' => $this->store->getGroupedLinks(0.0),
+            'groups' => $this->store->getGroupedLinks(),
         ]))->then(
             fn (string $html): Response => new Response(
                 200,

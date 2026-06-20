@@ -13,7 +13,7 @@ RUN npm install htmx.org@2.0.10 --no-save && \
     cp node_modules/htmx.org/dist/htmx.js public/assets/js/htmx.js
 
 # =========================================================================
-# STAGE 2: PRODUCTION RUNTIME (PHP 8.3 CLI Alpine)
+# STAGE 2: PRODUCTION RUNTIME (PHP 8.5 CLI Alpine)
 # =========================================================================
 FROM php:8.5-cli-alpine
 
@@ -23,13 +23,18 @@ COPY --from=css /app/public/assets/css /app/public/assets/css
 COPY --from=css /app/public/assets/js  /app/public/assets/js
 
 # Runtime configuration
+ARG APP_VERSION=dev
 ENV APP_ENV=production \
     PORT=80 \
     RATE_LIMIT=60 \
-    RATE_LIMIT_WINDOW=60
+    RATE_LIMIT_WINDOW=60 \
+    APP_VERSION=$APP_VERSION
 
 WORKDIR /app
 COPY . /app
+
+# Twig cache directory (excluded by .dockerignore — create it here)
+RUN mkdir -p cache/twig && chmod 777 cache/twig
 
 # Production PHP config: OPcache + JIT optimizations
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-performance.ini

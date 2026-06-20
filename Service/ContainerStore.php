@@ -56,31 +56,9 @@ final class ContainerStore implements ContainerStoreInterface
     /**
      * @return array<string, DashboardLink[]>
      */
-    public function getGroupedLinks(float $memoryThreshold): array
+    public function getGroupedLinks(): array
     {
-        if ($memoryThreshold <= 0.0) {
-            return $this->groupedLinks;
-        }
-
-        $thresholdBytes = (int) ($memoryThreshold * 1024 * 1024);
-
-        $filtered = [];
-        foreach ($this->groupedLinks as $group => $links) {
-            $passing = array_filter(
-                $links,
-                function (DashboardLink $link) use ($thresholdBytes): bool {
-                    $container = $this->containers[$link->containerId] ?? null;
-
-                    return $container !== null && $container->memoryUsageBytes >= $thresholdBytes;
-                },
-            );
-
-            if ($passing !== []) {
-                $filtered[$group] = array_values($passing);
-            }
-        }
-
-        return $filtered;
+        return $this->groupedLinks;
     }
 
     /**

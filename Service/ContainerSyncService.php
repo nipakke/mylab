@@ -139,7 +139,7 @@ final class ContainerSyncService
      */
     private function broadcastUpdate(): void
     {
-        $groupedLinks = $this->store->getGroupedLinks(0.0);
+        $groupedLinks = $this->store->getGroupedLinks();
 
         $data = [];
         foreach ($groupedLinks as $groupName => $links) {

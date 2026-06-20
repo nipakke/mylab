@@ -17,11 +17,10 @@ beforeEach(function () {
 });
 
 test('the system model maps properties into types successfully', function () {
-    $container = new Container('id-999', 'worker-node', 'running', 104857600);
+    $container = new Container('id-999', 'worker-node', 'running');
 
     expect($container->id)->toBeString()
-        ->and($container->name)->toBe('worker-node')
-        ->and($container->getFormattedMemory())->toBe('100 MB');
+        ->and($container->name)->toBe('worker-node');
 });
 
 test('the partial template loop crashes explicitly if strict type variables are missing', function () {
@@ -31,7 +30,7 @@ test('the partial template loop crashes explicitly if strict type variables are 
 });
 
 test('the layout components parse strictly validated elements into safe output blocks', function () {
-    $container = new Container('sha-test', 'load-balancer', 'exited', 0);
+    $container = new Container('sha-test', 'load-balancer', 'exited');
 
     $html = $this->twig->render('partials/container-rows.twig', [
         'containers' => [$container],

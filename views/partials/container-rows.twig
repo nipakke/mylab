@@ -6,10 +6,9 @@
     <td>
         <span class="badge {{ c.badgeClass }} badge-sm font-semibold text-xs">{{ c.status }}</span>
     </td>
-    <td class="font-mono text-sm text-slate-300">{{ c.memory }}</td>
 </tr>
 {% else %}
 <tr>
-    <td colspan="4" class="text-center text-slate-500 py-4">No active nodes detected.</td>
+    <td colspan="3" class="text-center text-slate-500 py-4">No active nodes detected.</td>
 </tr>
 {% endfor %}

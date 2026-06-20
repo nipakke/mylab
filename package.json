@@ -11,10 +11,10 @@
     "bump": "bumpp --commit --no-tag"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "latest",
+    "@tailwindcss/cli": "^4.3.1",
     "bumpp": "^11.1.0",
-    "daisyui": "latest",
+    "daisyui": "^5.5.23",
     "nodemon": "^3.1.0",
-    "tailwindcss": "latest"
+    "tailwindcss": "^4.3.1"
   }
 }

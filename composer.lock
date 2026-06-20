@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3fc627c3a9f20e945116334a6af5dc82",
+    "content-hash": "11c5be5c8827ae85a87b9df328e8e817",
     "packages": [
         {
             "name": "clue/docker-react",

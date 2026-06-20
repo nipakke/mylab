@@ -2,9 +2,9 @@
 node_modules/
 vendor/
 
-# Build artifacts
-public/assets/css/app.min.css
-public/assets/js/htmx.js
+# Build artifacts (directory-level to match .gitignore)
+public/assets/css/
+public/assets/js/
 
 # Cache
 cache/
@@ -17,8 +17,35 @@ tests/
 # CI
 .github/
 
+# Compose files (not needed inside the image)
+docker-compose.yml
+docker-compose.test.yml
+
+# Dead placeholder directories
+scripts/
+Action/
+Job/
+
+# OpenCode agent config
+skills-lock.json
+
+# Node.js package manager files (unused in production)
+pnpm-lock.yaml
+pnpm-workspace.yaml
+package-lock.json
+
+# Dev tooling
+nodemon.json
+Makefile
+
+# Test & analysis config
+phpunit.xml
+phpstan.neon
+
 # Documentation
 docs/
+README.md
+release.md
 
 # Environment
 .env

@@ -21,7 +21,6 @@ function makeContainer(array $labels = [], string $name = 'test-service', string
         id: 'abc123',
         name: $name,
         status: $status,
-        memoryUsageBytes: 1048576,
         labels: $labels,
     );
 }

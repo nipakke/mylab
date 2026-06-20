@@ -9,6 +9,6 @@ changelog:
         - bug
         - fix
   exclude:
-    - labels:
+      labels:
         - chore
         - ignore
